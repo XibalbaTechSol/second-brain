@@ -1,0 +1,109 @@
+// This schema is designed based on the "Second Brain" building blocks:
+// 1. Drop Box (Capture)
+// 2. Sorter (Classification)
+// 3. Filing Cabinet (Storage)
+// 4. Receipt (Audit)
+// 5. Automation (AI Loops)
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- 1. THE DROP BOX (Frictionless Capture) ---
+model InboxItem {
+  id        String   @id @default(cuid())
+  content   String
+  source    String
+  createdAt DateTime @default(now())
+  
+  status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, NEEDS_USER_REVIEW
+  confidence Float?  // "The Bouncer" confidence score
+  
+  processedEntityId String?
+  processingError   String?
+}
+
+// --- 2. THE SORTER & FILING CABINET (Core Entities) ---
+model Entity {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  type      String   // NOTE, TASK, PROJECT, CONTACT, RESOURCE
+  
+  tags      Tag[]
+  linksFrom Link[] @relation("SourceLink")
+  linksTo   Link[] @relation("TargetLink")
+  
+  summary   String?
+  embedding String?  // Serialized vector embedding
+  
+  task      TaskMetadata?
+  project   ProjectMetadata?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaskMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  isDone      Boolean  @default(false)
+  dueDate     DateTime?
+  priority    String?
+}
+
+model ProjectMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  status      String
+  deadline    DateTime?
+}
+
+// --- 3. THE FORM (Structure) ---
+model Tag {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  entities Entity[]
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  sourceId  String
+  source    Entity   @relation("SourceLink", fields: [sourceId], references: [id])
+  targetId  String
+  target    Entity   @relation("TargetLink", fields: [targetId], references: [id])
+  type      String
+}
+
+// --- 4. AI LOOPS & AUTOMATION ---
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  
+  trigger     String
+  conditions  String?    // Serialized JSON
+  actions     String     // Serialized JSON
+  
+  logs        AuditLog[]
+}
+
+// --- 5. THE RECEIPT (Audit Trail) ---
+model AuditLog {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  action      String
+  details     String
+  confidence  Float?
+  
+  workflowId  String?
+  workflow    Workflow? @relation(fields: [workflowId], references: [id])
+  
+  entityId    String?
+}
