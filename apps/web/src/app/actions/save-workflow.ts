@@ -75,6 +75,9 @@ export async function saveWorkflow(nodes: any[], edges: any[]) {
                         model_override: triggerNode.data.model,
                         system_prompt: triggerNode.data.systemPrompt
                     };
+                } else if (triggerNode.type === 'trigger') {
+                    triggerName = 'ON_CLASSIFY';
+                    conditions = {};
                 } else if (triggerNode.type === 'schedule') {
                     triggerName = 'SCHEDULE';
                     conditions = {

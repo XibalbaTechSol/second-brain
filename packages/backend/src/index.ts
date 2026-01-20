@@ -173,6 +173,9 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
                 userId: userId,
                 project: targetType === 'PROJECT' ? { create: { status: 'Active' } } : undefined,
                 person: targetType === 'PERSON' ? { create: { role: 'Unknown' } } : undefined,
+                idea: targetType === 'IDEA' ? { create: { potential: 'Medium' } } : undefined,
+                admin: targetType === 'ADMIN' ? { create: { importance: 'Medium' } } : undefined,
+                goal: targetType === 'GOAL' ? { create: { status: 'Active' } } : undefined,
                 linksTo: {
                   create: {
                     type: 'GENERATED_BY',

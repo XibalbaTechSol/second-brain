@@ -1,6 +1,7 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -10,7 +11,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import Image from '@tiptap/extension-image';
 import Mention from '@tiptap/extension-mention';
-import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Heading1, Heading2, List, CheckSquare } from 'lucide-react';
+import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Heading1, Heading2, List, CheckSquare, Type, ChevronDown } from 'lucide-react';
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import suggestion from './extensions/suggestion';
@@ -85,7 +86,61 @@ export default function Editor({ content, onChange }: { content: string, onChang
 
   return (
     <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden relative">
-      
+      {editor && (
+        <BubbleMenu editor={editor} className="flex bg-card shadow-xl border border-border rounded-lg overflow-hidden divide-x divide-border">
+          <div className="flex items-center px-1">
+            <button
+              onClick={() => {/* Turn into logic */ }}
+              className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-muted text-xs font-bold text-muted-foreground transition-colors"
+            >
+              <Type className="w-3.5 h-3.5" />
+              <span>Text</span>
+              <ChevronDown className="w-3 h-3 opacity-50" />
+            </button>
+          </div>
+          <div className="flex items-center p-1 gap-0.5">
+            <button
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('bold') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              title="Bold"
+            >
+              <Bold className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('italic') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              title="Italic"
+            >
+              <Italic className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('strike') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              title="Strikethrough"
+            >
+              <Strikethrough className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('code') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              title="Inline Code"
+            >
+              <Code className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                const url = window.prompt('URL');
+                if (url) editor.chain().focus().setLink({ href: url }).run();
+              }}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('link') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              title="Link"
+            >
+              <LinkIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </BubbleMenu>
+      )}
+
       <EditorContent editor={editor} className="font-sans editor-container text-foreground" />
       
       {/* GLOBAL STYLES FOR NOTION LOOK */}

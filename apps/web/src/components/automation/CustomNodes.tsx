@@ -113,7 +113,7 @@ export const AIRouterNode = memo(({ data = {} }: any) => {
             <Handle type="target" position={Position.Left} className="!bg-primary w-3 h-3 border-2 border-background" />
 
             <div className="mt-6 flex flex-col gap-3">
-                {['PROJECT', 'PERSON', 'IDEA', 'ADMIN'].map(type => (
+                {['PROJECT', 'PERSON', 'IDEA', 'ADMIN', 'GOAL'].map(type => (
                     <div key={type} className="relative flex items-center justify-end group">
                         <span className="text-[9px] font-black mr-3 text-muted-foreground lowercase tracking-widest group-hover:text-primary transition-colors">{type}</span>
                         <Handle type="source" position={Position.Right} id={type} className="w-2.5 h-2.5 !right-[-12px] bg-muted border-2 border-background hover:bg-primary transition-colors" />
@@ -187,13 +187,23 @@ export const ActionNode = memo(({ data = {} }: any) => {
     if (type.includes('slack')) Icon = Slack;
     if (type.includes('email')) Icon = Mail;
     if (type.includes('webhook')) Icon = Globe;
-    if (type.includes('create_')) { Icon = Database; iconColor = "text-aurora-green"; }
+    if (type.includes('create_')) { 
+        Icon = Database; 
+        if (type.includes('project')) iconColor = "text-primary";
+        else if (type.includes('person')) iconColor = "text-aurora-red";
+        else if (type.includes('idea')) iconColor = "text-aurora-yellow";
+        else if (type.includes('goal')) iconColor = "text-aurora-green";
+        else iconColor = "text-aurora-green"; 
+    }
     if (type.includes('notify')) { Icon = Send; iconColor = "text-aurora-orange"; }
     if (type.includes('ai_nudge')) { Icon = Sparkles; iconColor = "text-aurora-purple"; }
     if (type.includes('github')) Icon = Code;
 
     return (
         <NodeWrapper title={data?.label || "Action"} icon={Icon} colorClass="border-border shadow-sm" isProcessing={data?.isProcessing} data={data}>
+            <div className={`p-2 rounded-xl bg-background border border-border shadow-sm mb-3 w-fit ${iconColor}`}>
+                <Icon className="w-4 h-4" />
+            </div>
             <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-2 px-2 py-1 bg-muted/50 rounded-lg w-fit">
                 {type.replace('_', ' ')}
             </div>
