@@ -11,7 +11,7 @@ export async function GET() {
       prisma.inboxItem.findMany({ orderBy: { createdAt: 'desc' } }),
       prisma.entity.findMany({ 
         orderBy: { updatedAt: 'desc' },
-        include: { task: true, project: true }
+        include: { project: true, idea: true, person: true, admin: true, goal: true }
       }),
       prisma.auditLog.findMany({ 
         orderBy: { timestamp: 'desc' },

@@ -11,8 +11,11 @@ export async function GET(
     const entity = await prisma.entity.findUnique({
       where: { id },
       include: {
-        task: true,
         project: true,
+        idea: true,
+        person: true,
+        admin: true,
+        goal: true,
         tags: true,
         linksFrom: { include: { target: true } },
         linksTo: { include: { source: true } }
@@ -37,36 +40,38 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, content, isDone, priority, status } = body;
+    const { title, content, isDone, priority, status, tags } = body;
 
     // Prepare update data
-    const updateData: any = {
-      title,
-      content,
-    };
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (content !== undefined) updateData.content = content;
+    if (status !== undefined) updateData.status = status;
 
-    // Update Type-Specific Metadata if provided
-    if (isDone !== undefined || priority !== undefined) {
-      updateData.task = {
-        update: {
-          isDone,
-          priority
-        }
+    // Handle Tags Update (connectOrCreate)
+    if (tags && Array.isArray(tags)) {
+      // Filter out reserved tags/types if mixed in UI, but strictly we expect pure tags here
+      // Assuming UI sends ["Tag1", "Tag2"]
+      const cleanTags = tags.filter(t => t && t.trim().length > 0);
+      updateData.tags = {
+        set: [], // Clear current relations to reset to the new list
+        connectOrCreate: cleanTags.map((t: string) => ({
+          where: { name: t },
+          create: { name: t }
+        }))
       };
     }
 
     if (status !== undefined) {
       updateData.project = {
-        update: {
-          status
-        }
+        update: { status }
       };
     }
 
     const updatedEntity = await prisma.entity.update({
       where: { id },
       data: updateData,
-      include: { task: true, project: true }
+      include: { project: true, idea: true, person: true, admin: true, goal: true }
     });
 
     return NextResponse.json(updatedEntity);
@@ -83,11 +88,16 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     // Cleanup metadata first (cascade should handle this usually, but being safe)
-    await prisma.taskMetadata.deleteMany({ where: { entityId: id } });
-    await prisma.projectMetadata.deleteMany({ where: { entityId: id } });
-    
+    await Promise.all([
+      prisma.projectMetadata.deleteMany({ where: { entityId: id } }),
+      prisma.ideaMetadata.deleteMany({ where: { entityId: id } }),
+      prisma.personMetadata.deleteMany({ where: { entityId: id } }),
+      prisma.adminMetadata.deleteMany({ where: { entityId: id } }),
+      prisma.goalMetadata.deleteMany({ where: { entityId: id } }),
+    ]);
+
     // Delete links
     await prisma.link.deleteMany({ where: { OR: [{ sourceId: id }, { targetId: id }] } });
 

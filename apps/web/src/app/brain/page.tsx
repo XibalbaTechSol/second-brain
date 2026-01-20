@@ -32,8 +32,8 @@ export default function BrainPage() {
     if (linkRes.ok) setLinks(await linkRes.json());
   };
 
-  const selectedEntity = useMemo(() => 
-    entities.find(e => e.id === selectedEntityId), 
+  const selectedEntity = useMemo(() =>
+    entities.find(e => e.id === selectedEntityId),
     [entities, selectedEntityId]
   );
 
@@ -70,11 +70,11 @@ export default function BrainPage() {
 
   const graphData = useMemo(() => {
     return {
-      nodes: entities.map(e => ({ 
-        id: e.id, 
-        name: e.title, 
+      nodes: entities.map(e => ({
+        id: e.id,
+        name: e.title,
         val: e.type === 'PROJECT' ? 10 : 5,
-        color: e.id === linkSourceId ? '#F59E0B' : (e.type === 'TASK' ? '#A855F7' : e.type === 'PROJECT' ? '#3B82F6' : '#94A3B8')
+        color: e.id === linkSourceId ? '#F59E0B' : (e.type === 'PERSON' ? '#E11D48' : e.type === 'PROJECT' ? '#3B82F6' : e.type === 'IDEA' ? '#FBBF24' : '#94A3B8')
       })),
       links: links.map(l => ({ source: l.sourceId, target: l.targetId }))
     };
@@ -91,7 +91,7 @@ export default function BrainPage() {
       });
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
-      
+
       // Update local state
       setEntities(prev => prev.map(e => e.id === id ? { ...e, content } : e));
     } catch (error) {
@@ -102,7 +102,7 @@ export default function BrainPage() {
 
   const handleDelete = async () => {
     if (!selectedEntityId || !confirm('Are you sure you want to delete this memory?')) return;
-    
+
     try {
       await fetch(`/api/entities/${selectedEntityId}`, { method: 'DELETE' });
       setSelectedEntityId(null);
@@ -119,7 +119,7 @@ export default function BrainPage() {
       setSearchResults([]);
       return;
     }
-    
+
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       if (res.ok) {
@@ -134,7 +134,7 @@ export default function BrainPage() {
 
   return (
     <div className="h-screen w-full flex bg-gray-50 overflow-hidden">
-      
+
       {/* SIDEBAR: NAV & LIST */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -143,13 +143,13 @@ export default function BrainPage() {
             The Brain
           </h1>
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            <button 
+            <button
               onClick={() => setActiveTab('graph')}
               className={`p-1.5 rounded-md ${activeTab === 'graph' ? 'bg-white shadow-sm' : ''}`}
             >
               <Network className="w-4 h-4 text-gray-600" />
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('list')}
               className={`p-1.5 rounded-md ${activeTab === 'list' ? 'bg-white shadow-sm' : ''}`}
             >
@@ -161,8 +161,8 @@ export default function BrainPage() {
         <div className="p-4 border-b border-gray-100">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-            <input 
-              placeholder="Search thoughts..." 
+            <input
+              placeholder="Search thoughts..."
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -174,14 +174,12 @@ export default function BrainPage() {
             <button
               key={ent.id}
               onClick={() => setSelectedEntityId(ent.id)}
-              className={`w-full text-left p-3 rounded-lg flex items-center justify-between group transition-colors ${
-                selectedEntityId === ent.id ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-gray-50'
-              }`}
+              className={`w-full text-left p-3 rounded-lg flex items-center justify-between group transition-colors ${selectedEntityId === ent.id ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-gray-50'
+                }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  ent.type === 'TASK' ? 'bg-purple-500' : ent.type === 'PROJECT' ? 'bg-blue-500' : 'bg-gray-400'
-                }`} />
+                <div className={`w-2 h-2 rounded-full ${ent.type === 'TASK' ? 'bg-purple-500' : ent.type === 'PROJECT' ? 'bg-blue-500' : 'bg-gray-400'
+                  }`} />
                 <span className="text-sm font-medium text-gray-700 truncate w-40">{ent.title}</span>
               </div>
               {ent.score && <span className="text-xs text-green-600 font-mono">{(ent.score * 100).toFixed(0)}%</span>}
@@ -195,6 +193,7 @@ export default function BrainPage() {
       <div className="flex-1 flex flex-col relative">
         {activeTab === 'graph' ? (
           <div className="flex-1 bg-white relative">
+            {/* Re-enabled ForceGraph2D as per user feedback that issue was extension related */}
             <ForceGraph2D
               graphData={graphData}
               nodeLabel="name"
@@ -203,26 +202,26 @@ export default function BrainPage() {
               linkColor={() => '#E2E8F0'}
               onNodeClick={handleNodeClick}
             />
-            
+
             <div className="absolute top-6 right-6 flex gap-2">
-               <button 
+              <button
                 onClick={() => {
                   setIsLinkMode(!isLinkMode);
                   setLinkSourceId(null);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm border transition-all ${
-                  isLinkMode ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
-               >
-                 <Share2 className="w-4 h-4" />
-                 <span className="text-sm font-medium">{isLinkMode ? 'Click target node...' : 'Link Nodes'}</span>
-               </button>
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm border transition-all ${isLinkMode ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="text-sm font-medium">{isLinkMode ? 'Click target node...' : 'Link Nodes'}</span>
+              </button>
             </div>
 
             <div className="absolute bottom-6 left-6 bg-white/80 backdrop-blur p-4 rounded-xl border border-gray-200 text-xs space-y-2">
               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> Projects</div>
-              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500" /> Tasks</div>
-              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-400" /> Notes</div>
+              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500" /> People</div>
+              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-400" /> Ideas</div>
+              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-400" /> Admin</div>
             </div>
           </div>
         ) : (
@@ -231,16 +230,15 @@ export default function BrainPage() {
               <div className="max-w-3xl mx-auto space-y-8">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className={`text-xs font-bold uppercase tracking-widest ${
-                       selectedEntity.type === 'TASK' ? 'text-purple-600' : 
-                       selectedEntity.type === 'PROJECT' ? 'text-blue-600' : 'text-gray-500'
-                    }`}>
+                    <span className={`text-xs font-bold uppercase tracking-widest ${selectedEntity.type === 'PERSON' ? 'text-red-600' :
+                      selectedEntity.type === 'PROJECT' ? 'text-blue-600' : 'text-gray-500'
+                      }`}>
                       {selectedEntity.type}
                     </span>
                     <h2 className="text-4xl font-extrabold text-gray-900 mt-2">{selectedEntity.title}</h2>
                     <div className="flex items-center gap-2 mt-2">
-                       {saveStatus === 'saving' && <span className="text-xs text-gray-400 flex items-center gap-1"><SaveIcon className="w-3 h-3 animate-spin"/> Saving...</span>}
-                       {saveStatus === 'saved' && <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Saved</span>}
+                      {saveStatus === 'saving' && <span className="text-xs text-gray-400 flex items-center gap-1"><SaveIcon className="w-3 h-3 animate-spin" /> Saving...</span>}
+                      {saveStatus === 'saved' && <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Saved</span>}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -248,11 +246,11 @@ export default function BrainPage() {
                     <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"><Trash2 className="w-5 h-5" /></button>
                   </div>
                 </div>
-                
-                <Editor 
+
+                <Editor
                   key={selectedEntity.id}
-                  content={selectedEntity.content || ''} 
-                  onChange={(val) => handleSave(selectedEntity.id, val)} 
+                  content={selectedEntity.content || ''}
+                  onChange={(val) => handleSave(selectedEntity.id, val)}
                 />
               </div>
             ) : (

@@ -1,9 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, X, Bell, AlertTriangle } from 'lucide-react';
+import { 
+  Check, X, Bell, AlertTriangle, MessageSquare, 
+  Target, Sparkles, TrendingUp, Inbox, 
+  BrainCircuit, ArrowRight, Clock, Plus, Zap
+} from 'lucide-react';
+import Link from 'next/link';
 
-// Define types locally for now, or import from @second-brain/database if we export types properly
+// Nord Aurora Colors for Charts/Progress
+const AURORA = {
+  red: '#bf616a',
+  orange: '#d08770',
+  yellow: '#ebcb8b',
+  green: '#a3be8c',
+  purple: '#b48ead',
+};
+
 type InboxItem = {
   id: string;
   content: string;
@@ -11,7 +24,6 @@ type InboxItem = {
   status: string;
   createdAt: string;
   confidence?: number;
-  processingError?: string;
 };
 
 type Entity = {
@@ -20,20 +32,24 @@ type Entity = {
   type: string;
   summary?: string;
   createdAt: string;
-  task?: { isDone: boolean; priority?: string };
-  project?: { status: string };
+  status?: string;
+  confidence?: number;
+  project?: { 
+    progress: number;
+    priority: string;
+    nextAction: string;
+  };
 };
 
-export default function Home() {
+export default function ReimaginedDashboard() {
   const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Poll for updates to see backend working in real-time
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 3000);
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -43,219 +59,240 @@ export default function Home() {
         fetch('/api/inbox'),
         fetch('/api/entities')
       ]);
-      
       if (inboxRes.ok) setInboxItems(await inboxRes.json());
       if (entitiesRes.ok) setEntities(await entitiesRes.json());
-    } catch (error) {
-      console.error('Failed to load data', error);
+    } catch (err) {
+      console.error('Fetch failed', err);
     }
   };
 
-  const handleCapture = async (e: React.FormEvent) => {
+  const handleQuickCapture = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItem.trim()) return;
-
     setLoading(true);
     try {
-      const res = await fetch('/api/inbox', {
+      await fetch('/api/inbox', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newItem, source: 'web-dashboard' }),
+        body: JSON.stringify({ content: newItem, source: 'quick-capture' }),
       });
-
-      if (res.ok) {
-        setNewItem('');
-        fetchData(); // Immediate refresh
-      }
-    } catch (error) {
-      console.error('Failed to capture item', error);
+      setNewItem('');
+      fetchData();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCorrect = async (entityId: string) => {
-    const newType = prompt('What is the correct type? (TASK, PROJECT, NOTE, CONTACT, RESOURCE)');
-    if (!newType) return;
+  const projects = entities.filter(e => e.type === 'PROJECT');
+  const aiCoachItems = inboxItems.filter(i => i.source === 'AI_COACH' || i.source === 'AI_REASONING');
+  const pendingInbox = inboxItems.filter(i => i.status === 'PENDING' || i.status === 'PROCESSING');
 
-    try {
-      const res = await fetch('/api/corrections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entityId, correctType: newType.toUpperCase() })
-      });
-      if (res.ok) {
-        fetchData(); // Refresh to see changes
-      }
-    } catch (err) {
-      console.error('Correction failed', err);
-    }
-  };
-
-  // Group Items
-  const nudges = inboxItems.filter(i => i.source === 'SYSTEM_NUDGE' && i.status !== 'COMPLETED');
-  const needsReview = inboxItems.filter(i => i.status === 'NEEDS_USER_REVIEW');
-  const pending = inboxItems.filter(i => i.status === 'PENDING' || i.status === 'PROCESSING');
-  const recentCompleted = inboxItems.filter(i => i.status === 'COMPLETED').slice(0, 5);
+  // Stats for the snapshot
+  const activeProjectCount = projects.filter(p => p.status === 'Active').length;
+  const avgProgress = projects.length > 0 
+    ? Math.round(projects.reduce((acc, p) => acc + (p.project?.progress || 0), 0) / projects.length) 
+    : 0;
 
   return (
-    <main className="min-h-screen p-8 bg-gray-50 font-sans flex gap-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
       
-      {/* LEFT COLUMN: CAPTURE & INBOX */}
-      <div className="flex-1 max-w-xl space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Inbox (The Drop Box)</h1>
-          <p className="text-gray-600">Capture raw thoughts here. The Backend AI will sort them.</p>
+      {/* Header & Quick Snapshot */}
+      <header className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-border pb-8">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-foreground italic flex items-center gap-3 transition-colors">
+            Intelligence <span className="text-primary not-italic tracking-normal font-medium">Snapshot</span>
+          </h1>
+          <p className="text-muted-foreground mt-2 font-medium transition-colors">
+            Analyze your progress and behavioral alignment.
+          </p>
         </div>
-
-        {/* NUDGES */}
-        {nudges.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
-             <h3 className="text-sm font-bold text-yellow-800 flex items-center gap-2">
-               <Bell className="w-4 h-4 fill-yellow-600" />
-               Tap on the Shoulder (Nudges)
-             </h3>
-             {nudges.map(item => (
-               <div key={item.id} className="bg-white p-3 rounded-lg shadow-sm flex gap-3 items-start">
-                  <div className="flex-1 text-sm text-gray-800">{item.content}</div>
-                  <div className="flex gap-1">
-                     <button onClick={() => fetch(`/api/inbox/${item.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status:'COMPLETED'}) }).then(() => fetchData())} className="p-1 hover:bg-green-100 rounded text-green-600"><Check className="w-4 h-4"/></button>
-                     <button onClick={() => fetch(`/api/inbox/${item.id}`, { method: 'DELETE' }).then(() => fetchData())} className="p-1 hover:bg-gray-100 rounded text-gray-400"><X className="w-4 h-4"/></button>
-                  </div>
-               </div>
-             ))}
+        
+        <div className="flex gap-4">
+          <div className="bg-card border border-border p-4 rounded-3xl shadow-sm flex items-center gap-4 transition-colors">
+            <div className="p-3 bg-aurora-green/10 rounded-2xl">
+              <Target className="w-6 h-6 text-aurora-green" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-foreground">{activeProjectCount}</div>
+              <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest transition-colors">Active Projects</div>
+            </div>
           </div>
-        )}
-
-        {/* NEEDS REVIEW ("The Bouncer") */}
-        {needsReview.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
-             <h3 className="text-sm font-bold text-red-800 flex items-center gap-2">
-               <AlertTriangle className="w-4 h-4" />
-               The Bouncer: Low Confidence Items
-             </h3>
-             {needsReview.map(item => (
-               <div key={item.id} className="bg-white p-3 rounded-lg shadow-sm space-y-2">
-                  <div className="text-sm text-gray-800 font-medium">{item.content}</div>
-                  <div className="text-xs text-red-500 bg-red-50 p-2 rounded">
-                    {item.processingError || `Confidence: ${item.confidence}`}
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                     <button onClick={() => fetch(`/api/inbox/${item.id}`, { method: 'DELETE' }).then(() => fetchData())} className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Dismiss</button>
-                     <button onClick={() => fetch(`/api/inbox/${item.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status:'COMPLETED'}) }).then(() => fetchData())} className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">Force Approve</button>
-                  </div>
-               </div>
-             ))}
-          </div>
-        )}
-
-        {/* Capture Input */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <form onSubmit={handleCapture} className="flex gap-4">
-            <input
-              type="text"
-              value={newItem}
-              onChange={(e) => setNewItem(e.target.value)}
-              placeholder="E.g., 'Buy milk', 'Plan Q3 roadmap', 'Idea for app...'"
-              className="flex-1 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              Capture
-            </button>
-          </form>
-        </div>
-
-        {/* Inbox List */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Recent Processing</h2>
-          <div className="grid gap-3">
-            {[...pending, ...recentCompleted].map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
-                <div>
-                  <p className="text-gray-800">{item.content}</p>
-                  <span className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleTimeString()}</span>
-                </div>
-                <div className={`text-xs font-mono px-2 py-1 rounded ${
-                  item.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                  item.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {item.status}
-                </div>
-              </div>
-            ))}
+          
+          <div className="bg-card border border-border p-4 rounded-3xl shadow-sm flex items-center gap-4 transition-colors">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <TrendingUp className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-foreground">{avgProgress}%</div>
+              <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest transition-colors">Overall Momentum</div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* RIGHT COLUMN: THE BRAIN (PROCESSED ENTITIES) */}
-      <div className="flex-1 space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">The Brain (Sorted)</h1>
-          <p className="text-gray-600">Items processed and categorized by the "Sorter".</p>
-        </div>
-
-        <div className="grid gap-4">
-          {entities.map((entity) => (
-            <div key={entity.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 group">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-bold text-gray-900">{entity.title}</h3>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleCorrect(entity.id)}
-                    className="text-[10px] text-gray-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase font-bold tracking-tighter"
-                  >
-                    Fix AI
-                  </button>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${
-                    entity.type === 'TASK' ? 'bg-purple-100 text-purple-700' :
-                    entity.type === 'PROJECT' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {entity.type}
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm mb-3">{entity.summary}</p>
-              
-              {/* Type Specific Metadata */}
-              {entity.type === 'TASK' && entity.task && (
-                <div className="flex gap-2 text-xs">
-                  <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-100">
-                    Priority: {entity.task.priority}
-                  </span>
-                  <span className="bg-gray-50 text-gray-600 px-2 py-0.5 rounded border border-gray-100">
-                    Status: {entity.task.isDone ? 'Done' : 'To Do'}
-                  </span>
-                </div>
-              )}
-              
-              {entity.type === 'PROJECT' && entity.project && (
-                <div className="flex gap-2 text-xs">
-                  <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100">
-                    Status: {entity.project.status}
-                  </span>
-                </div>
-              )}
-
-              <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
-                Created: {new Date(entity.createdAt).toLocaleString()}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column: Quick Capture & Coach */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Quick Capture Card */}
+          <section className="bg-primary p-8 rounded-[2.5rem] shadow-xl shadow-primary/20 text-white relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+              <BrainCircuit className="w-40 h-40" />
+            </div>
+            
+            <div className="relative z-10">
+              <h2 className="text-2xl font-black mb-6 flex items-center gap-2 italic tracking-tight">
+                <Sparkles className="w-6 h-6 text-accent" /> Frictionless Capture
+              </h2>
+              <form onSubmit={handleQuickCapture} className="relative">
+                <input 
+                  type="text"
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  placeholder="Tell your brain something new..."
+                  className="w-full bg-white/10 border border-white/20 rounded-2xl py-5 pl-6 pr-32 text-xl placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-white backdrop-blur-sm"
+                />
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="absolute right-2 top-2 bottom-2 bg-white text-primary px-6 rounded-xl font-black text-sm hover:bg-muted transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loading ? 'Thinking...' : 'Capture'}
+                  {!loading && <ArrowRight className="w-4 h-4" />}
+                </button>
+              </form>
+              <div className="mt-4 flex gap-4 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                <span className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Auto-Routing active</span>
+                <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> Processing: {pendingInbox.length} items</span>
               </div>
             </div>
-          ))}
-          {entities.length === 0 && (
-            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-gray-400">
-              No entities yet. Capture something in the Inbox to see the AI work!
+          </section>
+
+          {/* AI Coach Feed */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 flex items-center gap-2 transition-colors">
+              <Bell className="w-4 h-4" /> Intelligence Notifications
+            </h3>
+            <div className="space-y-3">
+              {aiCoachItems.length === 0 ? (
+                <div className="bg-card/50 border-2 border-dashed border-border rounded-[2rem] p-12 text-center text-muted-foreground transition-colors">
+                  Your AI Coach is currently observing. Capture more data to trigger insights.
+                </div>
+              ) : (
+                aiCoachItems.slice(0, 5).map((item) => (
+                  <div key={item.id} className="bg-card border border-border p-6 rounded-[2rem] flex gap-4 items-start hover:border-primary/30 transition-all group shadow-sm transition-colors">
+                    <div className={`p-3 rounded-2xl shrink-0 ${item.source === 'AI_COACH' ? 'bg-aurora-purple/10 text-aurora-purple' : 'bg-primary/10 text-primary'}`}>
+                      {item.source === 'AI_COACH' ? <BrainCircuit className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground font-medium leading-relaxed transition-colors">
+                        {item.content.replace('🧠 AI COACH: ', '').replace('🧠 AI REASONING: ', '')}
+                      </p>
+                      <div className="mt-2 flex items-center gap-3 text-[10px] font-black uppercase text-muted-foreground tracking-widest transition-colors">
+                        <span>{item.source === 'AI_COACH' ? 'Strategic Nudge' : 'Deep Reasoning'}</span>
+                        <span>•</span>
+                        <span>{new Date(item.createdAt).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                    <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-muted rounded-xl transition-all">
+                      <Check className="w-4 h-4 text-aurora-green" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
-          )}
+          </section>
+        </div>
+
+        {/* Right Column: Goal Snapshot & Stats */}
+        <div className="lg:col-span-4 space-y-8">
+          
+          {/* Active Goals / Projects List */}
+          <section className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-colors">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl font-black italic tracking-tight text-foreground transition-colors">Active Goals</h3>
+              <Link href="/databases/projects" className="p-2 hover:bg-muted rounded-xl transition-colors">
+                <Plus className="w-5 h-5 text-muted-foreground" />
+              </Link>
+            </div>
+            
+            <div className="space-y-6">
+              {projects.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground text-sm font-medium transition-colors">No active projects yet.</div>
+              ) : (
+                projects.slice(0, 4).map((proj) => (
+                  <div key={proj.id} className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <span className="font-bold text-sm text-foreground truncate max-w-[180px] transition-colors">{proj.title}</span>
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest transition-colors">{proj.project?.progress || 0}%</span>
+                    </div>
+                    {/* Minimal SVG Progress Bar */}
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden transition-colors">
+                      <div 
+                        className="h-full bg-primary transition-all duration-1000"
+                        style={{ width: `${proj.project?.progress || 0}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary transition-colors">
+                      <ArrowRight className="w-3 h-3" /> Next: {proj.project?.nextAction || 'Define next step...'}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            {projects.length > 4 && (
+              <Link 
+                href="/databases/projects"
+                className="mt-8 block text-center py-3 border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all"
+              >
+                View all {projects.length} projects
+              </Link>
+            )}
+          </section>
+
+          {/* Quick Metrics / Visual Info */}
+          <section className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-colors">
+             <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 transition-colors font-medium transition-colors">Knowledge Composition</h3>
+             {/* Circular Composition Placeholder using SVG */}
+             <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="80" cy="80" r="70" stroke="var(--muted)" strokeWidth="12" fill="transparent" className="transition-colors" />
+                  <circle 
+                    cx="80" cy="80" r="70" 
+                    stroke="var(--primary)" strokeWidth="12" fill="transparent" 
+                    strokeDasharray="440" 
+                    strokeDashoffset={440 - (440 * (avgProgress/100))}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-black text-foreground transition-colors">{entities.length}</span>
+                  <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter transition-colors">Entities</span>
+                </div>
+             </div>
+             
+             <div className="mt-8 space-y-3">
+                {[
+                  { label: 'Projects', value: projects.length, color: 'bg-primary' },
+                  { label: 'Ideas', value: entities.filter(e => e.type === 'IDEA' || e.type === 'NOTE').length, color: 'bg-aurora-yellow' },
+                  { label: 'People', value: entities.filter(e => e.type === 'PERSON' || e.type === 'CONTACT').length, color: 'bg-aurora-blue' },
+                ].map(stat => (
+                  <div key={stat.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${stat.color.replace('aurora-', '')}`} />
+                      <span className="text-xs font-bold text-muted-foreground transition-colors">{stat.label}</span>
+                    </div>
+                    <span className="text-xs font-black text-foreground transition-colors">{stat.value}</span>
+                  </div>
+                ))}
+             </div>
+          </section>
+
         </div>
       </div>
-
-    </main>
+    </div>
   );
 }

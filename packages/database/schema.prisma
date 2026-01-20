@@ -7,11 +7,39 @@
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+}
+
+// --- 0. AUTH & SaaS ---
+model User {
+  id            String    @id @default(cuid())
+  name          String?   @default("New User")
+  email         String?   @unique
+  password      String?   // For basic auth if needed
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  trialEndsAt   DateTime? // For the 7-day free trial
+  subscription  Subscription?
+
+  inboxItems    InboxItem[]
+  entities      Entity[]
+  workflows     Workflow[]
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  tier      String   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // --- 1. THE DROP BOX (Frictionless Capture) ---
@@ -26,14 +54,20 @@ model InboxItem {
   
   processedEntityId String?
   processingError   String?
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 // --- 2. THE SORTER & FILING CABINET (Core Entities) ---
 model Entity {
   id        String   @id @default(cuid())
   title     String
-  content   String?
-  type      String   // NOTE, TASK, PROJECT, CONTACT, RESOURCE
+  content   String?  // Legacy content field, moving towards blocks
+  type      String   // PROJECT, IDEA, PERSON, ADMIN, GOAL
+  intent    String?  // e.g. Planning, Finance, Networking
+  status    String?  @default("Active")
+  confidence Float?  @default(1.0) // P-value
   
   tags      Tag[]
   linksFrom Link[] @relation("SourceLink")
@@ -42,26 +76,140 @@ model Entity {
   summary   String?
   embedding String?  // Serialized vector embedding
   
-  task      TaskMetadata?
+  blocks    Block[]
+  
   project   ProjectMetadata?
+  person    PersonMetadata?
+  idea      IdeaMetadata?
+  admin     AdminMetadata?
+  goal      GoalMetadata?
+  
+  reviews   Review[]
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model TaskMetadata {
-  entityId    String   @id
-  entity      Entity   @relation(fields: [entityId], references: [id])
-  isDone      Boolean  @default(false)
-  dueDate     DateTime?
-  priority    String?
+model Block {
+  id        String   @id @default(cuid())
+  type      String   // text, heading-1, heading-2, todo, image, etc.
+  content   String?
+  order     Int
+  confidence Float?  @default(1.0) // P-value
+  
+  entityId  String
+  entity    Entity   @relation(fields: [entityId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProjectMetadata {
   entityId    String   @id
   entity      Entity   @relation(fields: [entityId], references: [id])
-  status      String
+  status      String   @default("Active")
   deadline    DateTime?
+  priority    String?  @default("Medium")
+  
+  // Goal-reaching fields
+  outcome     String?  // The desired clear outcome
+  nextAction  String?  // The immediate next physical action (GTD)
+  progress    Float?   @default(0) // 0 to 100
+  
+  // Advanced Fields
+  blockers    String?
+  budget      Float?
+  riskLevel   String?  // Low, Medium, High
+  health      String?  @default("On Track")
+}
+
+model PersonMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  email       String?
+  phone       String?
+  role        String?
+  company     String?
+  linkedin    String?
+  lastContacted DateTime?
+}
+
+model IdeaMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  potential   String?  @default("Medium") // High, Medium, Low
+  area        String?  // e.g. Tech, Art, Business
+  
+  // Advanced Fields
+  impactScore Float?   // 1 to 10
+  effortScore Float?   // 1 to 10
+  feasibility String?  @default("Medium")
+}
+
+model AdminMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  category    String?  // Finance, Legal, Health, etc.
+  importance  String?  @default("Medium")
+  
+  // Advanced Fields
+  expiryDate  DateTime?
+  effectiveDate DateTime?
+  confidentiality String? @default("Internal")
+}
+
+model GoalMetadata {
+  entityId    String   @id
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  status      String   @default("Active")
+  startDate   DateTime @default(now())
+  targetDate  DateTime?
+  priority    String?  @default("High")
+  progress    Float?   @default(0)
+  
+  // New Achievement Fields
+  successCriteria String? // Qualitative description of success
+  motivation      String? // Why is this goal important? (The "Why")
+  reward          String? // What happens when this is reached?
+  obstacles       String? // Predicted challenges
+  
+  keyResults  KeyResult[]
+}
+
+model KeyResult {
+  id           String   @id @default(cuid())
+  name         String
+  metricType   String   // Number, Percentage, Boolean, Currency
+  initialValue Float    @default(0)
+  targetValue  Float
+  currentValue Float    @default(0)
+  unit         String?  // lbs, %, $, etc.
+  
+  goalId       String
+  goal         GoalMetadata @relation(fields: [goalId], references: [entityId])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  type        String   // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  date        DateTime @default(now())
+  
+  entityId    String
+  entity      Entity   @relation(fields: [entityId], references: [id])
+  
+  // Reflection fields
+  wins        String?
+  challenges  String?
+  adjustments String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // --- 3. THE FORM (Structure) ---
@@ -78,6 +226,7 @@ model Link {
   targetId  String
   target    Entity   @relation("TargetLink", fields: [targetId], references: [id])
   type      String
+  confidence Float?  @default(1.0) // P-value
 }
 
 // --- 4. AI LOOPS & AUTOMATION ---
@@ -92,6 +241,9 @@ model Workflow {
   actions     String     // Serialized JSON
   
   logs        AuditLog[]
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 // --- 5. THE RECEIPT (Audit Trail) ---

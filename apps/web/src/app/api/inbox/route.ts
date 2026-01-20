@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getServerSession } from "next-auth/next";
 
 export async function GET() {
   try {
+    const session = await getServerSession() as any;
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const items = await prisma.inboxItem.findMany({
+      where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(items);
@@ -15,6 +22,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession() as any;
     const { content, source } = await request.json();
     
     if (!content) {
@@ -25,6 +33,7 @@ export async function POST(request: Request) {
       data: {
         content,
         source: source || 'api',
+        userId: session?.user?.id || null // Allow anonymous for now if no session, but usually middlewae handles this
       },
     });
 
