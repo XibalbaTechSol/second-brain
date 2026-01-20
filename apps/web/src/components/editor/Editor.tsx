@@ -149,7 +149,54 @@ export const Editor: React.FC<EditorProps> = ({ initialContent, onUpdate, editab
                 </BubbleMenu>
             )}
 
-            <EditorContent editor={editor} />
+            {editor && (
+                <FloatingMenu editor={editor} className="flex bg-card shadow-lg border border-border rounded-lg overflow-hidden p-1 gap-1">
+                    <button
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
+                        title="Heading 1"
+                    >
+                        <Heading1 className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
+                        title="Heading 2"
+                    >
+                        <Heading2 className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleBulletList().run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('bulletList') ? 'bg-muted' : ''}`}
+                        title="Bullet List"
+                    >
+                        <List className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('orderedList') ? 'bg-muted' : ''}`}
+                        title="Numbered List"
+                    >
+                        <ListOrdered className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleTaskList().run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('taskList') ? 'bg-muted' : ''}`}
+                        title="Task List"
+                    >
+                        <CheckSquare className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                        className={`p-1.5 rounded hover:bg-muted ${editor.isActive('blockquote') ? 'bg-muted' : ''}`}
+                        title="Quote"
+                    >
+                        <Quote className="w-4 h-4 text-foreground" />
+                    </button>
+                </FloatingMenu>
+            )}
+
+            <EditorContent editor={editor} className="text-foreground" />
 
             <style jsx global>{`
                 .editor-container .ProseMirror {

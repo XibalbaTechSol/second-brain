@@ -1,7 +1,7 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
+import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -11,7 +11,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import Image from '@tiptap/extension-image';
 import Mention from '@tiptap/extension-mention';
-import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Heading1, Heading2, List, CheckSquare, Type, ChevronDown } from 'lucide-react';
+import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Heading1, Heading2, List, CheckSquare, Type, ChevronDown, Quote } from 'lucide-react';
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import suggestion from './extensions/suggestion';
@@ -75,7 +75,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg focus:outline-none max-w-none min-h-[500px] px-8 py-6',
+        class: 'prose prose-lg dark:prose-invert focus:outline-none max-w-none min-h-[500px] px-8 py-6 editor-container',
       },
     },
   });
@@ -139,6 +139,46 @@ export default function Editor({ content, onChange }: { content: string, onChang
             </button>
           </div>
         </BubbleMenu>
+      )}
+
+      {editor && (
+        <FloatingMenu editor={editor} className="flex bg-card shadow-lg border border-border rounded-lg overflow-hidden p-1 gap-1">
+          <button
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
+            title="Heading 1"
+          >
+            <Heading1 className="w-4 h-4 text-foreground" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
+            title="Heading 2"
+          >
+            <Heading2 className="w-4 h-4 text-foreground" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('bulletList') ? 'bg-muted' : ''}`}
+            title="Bullet List"
+          >
+            <List className="w-4 h-4 text-foreground" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('taskList') ? 'bg-muted' : ''}`}
+            title="Task List"
+          >
+            <CheckSquare className="w-4 h-4 text-foreground" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('blockquote') ? 'bg-muted' : ''}`}
+            title="Quote"
+          >
+            <Quote className="w-4 h-4 text-foreground" />
+          </button>
+        </FloatingMenu>
       )}
 
       <EditorContent editor={editor} className="font-sans editor-container text-foreground" />
