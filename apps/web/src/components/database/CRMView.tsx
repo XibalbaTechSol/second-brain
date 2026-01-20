@@ -7,9 +7,10 @@ interface CRMViewProps {
     data: any[];
     onUpdateRow?: (id: string, updates: any) => void;
     onOpenPage: (row: any) => void;
+    onCreateRow?: () => void;
 }
 
-export const CRMView: React.FC<CRMViewProps> = ({ data, onUpdateRow, onOpenPage }) => {
+export const CRMView: React.FC<CRMViewProps> = ({ data, onUpdateRow, onOpenPage, onCreateRow }) => {
     const [search, setSearch] = useState('');
 
     const filteredData = data.filter(p => 
@@ -38,7 +39,10 @@ export const CRMView: React.FC<CRMViewProps> = ({ data, onUpdateRow, onOpenPage 
                         <span>Filter</span>
                     </button>
                 </div>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                <button 
+                    onClick={onCreateRow}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all"
+                >
                     <UserPlus className="w-4 h-4" />
                     <span>Add Person</span>
                 </button>

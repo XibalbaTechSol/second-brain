@@ -12,23 +12,18 @@ export default function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) return <div className="w-10 h-10" />;
 
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="flex items-center gap-2.5 px-3 py-1 rounded text-[#5F5E5B] dark:text-gray-400 hover:bg-[#EFEFED] dark:hover:bg-[#1e1e1e] hover:text-[#37352f] dark:hover:text-gray-100 w-full transition-colors min-h-[30px]"
+      className="p-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all active:scale-90 flex items-center justify-center border border-transparent hover:border-border shadow-sm hover:shadow-md"
+      aria-label="Toggle Theme"
     >
       {theme === 'dark' ? (
-        <>
-          <Sun className="w-[18px] h-[18px] opacity-70" strokeWidth={1.5} />
-          <span className="text-sm font-medium">Light Mode</span>
-        </>
+        <Sun className="w-5 h-5" strokeWidth={2} />
       ) : (
-        <>
-          <Moon className="w-[18px] h-[18px] opacity-70" strokeWidth={1.5} />
-          <span className="text-sm font-medium">Dark Mode</span>
-        </>
+        <Moon className="w-5 h-5" strokeWidth={2} />
       )}
     </button>
   );

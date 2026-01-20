@@ -19,17 +19,72 @@ model User {
   id            String    @id @default(cuid())
   name          String?   @default("New User")
   email         String?   @unique
+  emailVerified DateTime?
   password      String?   // For basic auth if needed
   image         String?
+  accounts      Account[]
+  sessions      Session[]
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   trialEndsAt   DateTime? // For the 7-day free trial
   subscription  Subscription?
+  settings      UserSettings?
 
   inboxItems    InboxItem[]
   entities      Entity[]
   workflows     Workflow[]
+  calendarEvents CalendarEvent[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserSettings {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  
+  geminiApiKey  String?  // Per-user API key override
+  aiProvider    String   @default("GEMINI") // GEMINI, OLLAMA, MOCK
+  
+  infraApiKey   String?  @unique // For infrastructure/programmatic access
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Subscription {
@@ -38,6 +93,12 @@ model Subscription {
   user      User     @relation(fields: [userId], references: [id])
   tier      String   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
   status    String   @default("ACTIVE")
+  
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -244,6 +305,26 @@ model Workflow {
 
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
+
+  lastRunAt DateTime?
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  scheduledAt DateTime
+  type        String   @default("NUDGE") // NUDGE, NOTIFICATION, TASK
+  status      String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  
+  // Actions to perform when triggered
+  actions     String?  // Serialized JSON actions (like workflow actions)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // --- 5. THE RECEIPT (Audit Trail) ---

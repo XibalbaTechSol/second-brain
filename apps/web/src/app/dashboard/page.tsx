@@ -252,6 +252,40 @@ export default function ReimaginedDashboard() {
             )}
           </section>
 
+          {/* New Calendar/Scheduling Module */}
+          <section className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-colors overflow-hidden">
+            <h3 className="text-xl font-black italic tracking-tight text-foreground mb-6 transition-colors flex items-center gap-2">
+              <Clock className="w-5 h-5 text-aurora-orange" /> Synaptic Schedule
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="bg-background/50 border border-border rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <span>Upcoming</span>
+                  <span className="text-aurora-green">Auto-Optimizing</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {[
+                    { time: '10:00 AM', label: 'Project Momentum Check', type: 'Nudge' },
+                    { time: '02:30 PM', label: 'Idea Scaling Insight', type: 'Logic' },
+                    { time: 'Tomorrow', label: 'Admin Efficiency Audit', type: 'Automation' }
+                  ].map((event, i) => (
+                    <div key={i} className="flex gap-3 items-center group">
+                      <div className="text-[9px] font-mono text-muted-foreground w-14 shrink-0">{event.time}</div>
+                      <div className="flex-1 text-[11px] font-bold text-foreground/80 truncate group-hover:text-primary transition-colors">{event.label}</div>
+                      <div className="px-1.5 py-0.5 rounded-md bg-muted text-[8px] font-black uppercase text-muted-foreground">{event.type}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <button className="w-full py-3 border border-dashed border-border rounded-2xl text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:border-primary/50 hover:text-primary transition-all">
+                + Schedule intelligence
+              </button>
+            </div>
+          </section>
+
           {/* Quick Metrics / Visual Info */}
           <section className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm transition-colors">
              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 transition-colors font-medium transition-colors">Knowledge Composition</h3>

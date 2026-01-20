@@ -155,6 +155,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ initialData, viewTit
                         data={data} 
                         onUpdateRow={handleUpdateRow} 
                         onOpenPage={setActivePage} 
+                        onCreateRow={handleCreateRow}
                     />
                 ) : (
                     <TableView 

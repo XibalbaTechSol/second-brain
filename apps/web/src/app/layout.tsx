@@ -18,12 +18,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isPublicPage = pathname === '/' || pathname === '/login';
+  const isPublicPage = pathname === '/' || pathname === '/login' || pathname === '/about';
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased bg-white dark:bg-[#0a0a0a] text-[#37352f] dark:text-gray-200 transition-colors`}
+        className={`${inter.variable} font-sans antialiased bg-background text-foreground transition-colors duration-300`}
       >
         <Providers>
           <div className="flex h-screen overflow-hidden">

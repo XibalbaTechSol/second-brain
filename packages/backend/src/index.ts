@@ -343,12 +343,147 @@ async function runNudgeEngine() {
             content: `🧠 AI COACH: ${nudgeText} (re: ${proj.title})`,
             source: 'AI_COACH',
             status: 'PENDING',
-            confidence: 1.0
+            confidence: 1.0,
+            userId: proj.userId
           }
         });
       }
     } catch (err) {
       console.error('Nudge generation failed', err);
+    }
+  }
+}
+
+// --- CALENDAR EVENT ENGINE ---
+async function runCalendarEvents() {
+  console.log('📅 Checking for due calendar events...');
+  
+  const events = await prisma.calendarEvent.findMany({
+    where: { 
+      status: 'PENDING',
+      scheduledAt: { lte: new Date() }
+    }
+  });
+
+  for (const event of events) {
+    try {
+      console.log(`⚡ Triggering Calendar Event: "${event.title}" for user ${event.userId}`);
+      
+      // Create the nudge/notification from the event
+      await prisma.inboxItem.create({
+        data: {
+          content: `${event.type}: ${event.title}${event.description ? ` - ${event.description}` : ''}`,
+          source: 'AI_CALENDAR',
+          status: 'PENDING',
+          confidence: 1.0,
+          userId: event.userId
+        }
+      });
+
+      await prisma.calendarEvent.update({
+        where: { id: event.id },
+        data: { status: 'COMPLETED' }
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          action: 'CALENDAR_EVENT_TRIGGERED',
+          details: `Event "${event.title}" (${event.type}) executed.`,
+          entityId: event.id
+        }
+      });
+    } catch (err) {
+      console.error(`Error running calendar event ${event.id}:`, err);
+    }
+  }
+}
+
+// --- SCHEDULED WORKFLOW ENGINE ---
+async function runScheduledWorkflows() {
+  console.log('⏰ Checking for scheduled workflows...');
+  
+  const workflows = await prisma.workflow.findMany({
+    where: { 
+      isActive: true,
+      trigger: 'SCHEDULE'
+    }
+  });
+
+  const now = new Date();
+
+  for (const flow of workflows) {
+    try {
+      const conditions = JSON.parse(flow.conditions || '{}');
+      const interval = conditions.interval || 'day';
+      const lastRun = flow.lastRunAt ? new Date(flow.lastRunAt) : new Date(0);
+      
+      let shouldRun = false;
+      const diffMs = now.getTime() - lastRun.getTime();
+
+      if (interval === 'minute' && diffMs >= 60 * 1000) shouldRun = true;
+      else if (interval === 'hour' && diffMs >= 60 * 60 * 1000) shouldRun = true;
+      else if (interval === 'day' && diffMs >= 24 * 60 * 60 * 1000) shouldRun = true;
+      else if (interval === 'week' && diffMs >= 7 * 24 * 60 * 60 * 1000) shouldRun = true;
+
+      if (shouldRun) {
+        console.log(`⚡ Executing Scheduled Workflow: "${flow.name}" for user ${flow.userId}`);
+        
+        const actions = JSON.parse(flow.actions as string);
+        let workflowContext = {
+          originalContent: "Scheduled Execution",
+          reasoningInsights: "",
+          entityType: "SCHEDULE",
+          entityId: "scheduled"
+        };
+
+        for (const action of actions) {
+          // Re-use logic from runWorkflows or refactor to common function
+          if (action.type === 'notify') {
+            let message = action.params.message || action.params.template || "Scheduled notification";
+            await prisma.inboxItem.create({
+              data: {
+                content: `📅 SCHEDULED: ${message}`,
+                source: 'AI_RECEIPT',
+                status: 'COMPLETED',
+                confidence: 1.0,
+                userId: flow.userId
+              }
+            });
+          } else if (action.type === 'ai_nudge') {
+             // For scheduled nudges, we might want to pick a random active project or just send a general tip
+             const systemPrompt = `You are the "CognitoFlow Performance Coach". Provide a daily high-performance tip for the user. Keep it under 20 words.`;
+             const model = genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+             const result = await model.generateContent(systemPrompt);
+             const nudgeText = result.response.text().trim();
+
+             await prisma.inboxItem.create({
+               data: {
+                 content: `🧠 COACH TIP: ${nudgeText}`,
+                 source: 'AI_COACH',
+                 status: 'COMPLETED',
+                 confidence: 1.0,
+                 userId: flow.userId
+               }
+             });
+          }
+          // ... handle other action types if needed
+        }
+
+        await prisma.workflow.update({
+          where: { id: flow.id },
+          data: { lastRunAt: now }
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            action: 'WORKFLOW_EXECUTED',
+            details: `Scheduled workflow "${flow.name}" executed successfully.`,
+            workflowId: flow.id
+          }
+        });
+      }
+    } catch (err) {
+      console.error(`Error running scheduled workflow ${flow.name}:`, err);
     }
   }
 }
@@ -539,6 +674,8 @@ async function main() {
       if (tick % 10 === 0) {
         console.log('⏰ Running Nudge Engine...');
         await runNudgeEngine();
+        await runScheduledWorkflows();
+        await runCalendarEvents();
       }
     } catch (loopError) {
       console.error('❌ Error in Main Loop:', loopError);

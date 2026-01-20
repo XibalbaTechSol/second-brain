@@ -15,6 +15,7 @@
     "@google/generative-ai": "^0.24.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@second-brain/database": "*",
+    "@stripe/stripe-js": "^8.6.3",
     "@tiptap/extension-bubble-menu": "^3.15.3",
     "@tiptap/extension-code-block-lowlight": "^3.15.3",
     "@tiptap/extension-floating-menu": "^3.15.3",
@@ -41,6 +42,7 @@
     "react-force-graph": "^1.48.1",
     "react-force-graph-2d": "^1.29.0",
     "reactflow": "^11.11.4",
+    "stripe": "^20.2.0",
     "tippy.js": "^6.3.7",
     "tiptap-extension-global-drag-handle": "^0.1.18"
   },

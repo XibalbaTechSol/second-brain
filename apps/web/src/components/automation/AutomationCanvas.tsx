@@ -14,7 +14,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { TriggerNode, AIRouterNode, ActionNode, WebhookNode, ScheduleNode, ConditionNode, CodeNode, CalendarNode, GeminiReasoningNode } from './CustomNodes';
-import { Save, Settings, X, Cpu, Zap, Database, Slack, Mail, Globe, Calendar, Split, Code, Info, Play, Clock, Sparkles, Send, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Save, Settings, X, Cpu, Zap, Database, Slack, Mail, Globe, Calendar, Split, Code, Info, Play, Clock, Sparkles, Send, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, BrainCircuit } from 'lucide-react';
 
 const INITIAL_NODES = [
     {
@@ -445,7 +445,7 @@ export default function AutomationCanvas() {
                         fitView
                         className="bg-background transition-colors duration-300"
                     >
-                        <Background gap={20} size={1} color="var(--border)" opacity={0.4} />
+                        <Background gap={20} size={1} color="var(--border)" />
                         <Controls className="fill-foreground bg-card border-border border rounded-xl overflow-hidden shadow-lg" />
                         <MiniMap 
                             zoomable 

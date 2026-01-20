@@ -3,29 +3,40 @@
 import Link from 'next/link';
 import { BrainCircuit, Zap, Shield, Smartphone, ArrowRight, Network, Sparkles, Check, Globe, BarChart3, Lock } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useSession } from 'next-auth/react';
 
 export default function WelcomePage() {
+  const { data: session } = useSession();
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 transition-colors duration-300">
       
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-colors">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-2.5 group cursor-pointer">
-            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
-              <BrainCircuit className="w-6 h-6 text-primary-foreground" />
+        <div className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="bg-primary p-2.5 rounded-2xl shadow-xl shadow-primary/20 group-hover:scale-110 transition-transform duration-500">
+              <BrainCircuit className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="font-black text-2xl tracking-tighter italic text-foreground">CognitoFlow</span>
+            <span className="font-black text-3xl tracking-tighter italic text-foreground transition-colors">CognitoFlow</span>
           </div>
           
           <div className="hidden md:flex gap-10 items-center">
-            <Link href="#features" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">Features</Link>
-            <Link href="#pricing" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">Pricing</Link>
-            <div className="h-4 w-[1px] bg-border" />
+            <Link href="/about" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">About</Link>
+            <Link href="#features" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Features</Link>
+            <Link href="#pricing" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Pricing</Link>
+            <Link href="#api" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">API</Link>
+            <div className="h-6 w-[1px] bg-border" />
             <ThemeToggle />
-            <Link href="/login" className="bg-primary text-primary-foreground px-8 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-md shadow-primary/10">
-              Sign In
-            </Link>
+            {session ? (
+              <Link href="/dashboard" className="bg-primary text-primary-foreground px-10 py-3.5 rounded-2xl font-black uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/login" className="bg-primary text-primary-foreground px-10 py-3.5 rounded-2xl font-black uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95">
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -51,8 +62,8 @@ export default function WelcomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/login" className="w-full sm:w-auto bg-primary text-primary-foreground px-10 py-5 rounded-2xl text-xl font-black hover:opacity-90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group">
-                Start 7-Day Free Trial <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <Link href={session ? "/dashboard" : "/login"} className="w-full sm:w-auto bg-primary text-primary-foreground px-10 py-5 rounded-2xl text-xl font-black hover:opacity-90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group">
+                {session ? "Enter Brain" : "Start 7-Day Free Trial"} <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Link>
               <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium px-6 py-2 border border-border rounded-2xl bg-card/50">
                 <Lock className="w-4 h-4" />
@@ -176,6 +187,61 @@ export default function WelcomePage() {
         </div>
       </section>
 
+      {/* Developer API Section */}
+      <section id="api" className="py-32 px-6 max-w-7xl mx-auto transition-colors">
+        <div className="bg-card border border-border rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden shadow-2xl shadow-primary/5">
+          <div className="absolute top-0 right-0 p-20 opacity-5 pointer-events-none">
+            <Globe className="w-64 h-64 text-primary" />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black mb-8 italic tracking-tight text-foreground transition-colors">Built for <br/>Infrastructure</h2>
+              <p className="text-muted-foreground text-lg mb-10 leading-relaxed transition-colors font-medium">
+                CognitoFlow isn't just a web app. It's an intelligence layer. Connect your entire ecosystem via our programmatic API.
+              </p>
+              
+              <div className="space-y-6">
+                {[
+                  { title: "Programmatic Capture", desc: "Inject thoughts and data from CLI tools or scripts." },
+                  { title: "Secure Keys", desc: "User-specific infrastructure keys with easy rotation." },
+                  { title: "Webhook Ready", desc: "Integrate with any service that supports HTTP POST." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 items-start">
+                    <div className="bg-aurora-green/10 p-1.5 rounded-lg mt-1 shrink-0">
+                      <Check className="w-4 h-4 text-aurora-green" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground transition-colors">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground transition-colors font-medium">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl p-8 border border-border shadow-inner group transition-all">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-aurora-red/40" />
+                  <div className="w-3 h-3 rounded-full bg-aurora-yellow/40" />
+                  <div className="w-3 h-3 rounded-full bg-aurora-green/40" />
+                </div>
+                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">External Agent Capture</span>
+              </div>
+              <pre className="bg-transparent text-foreground font-mono text-xs overflow-x-auto leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+{`curl -X POST cognitoflow.ai/api/v1/capture \\
+  -H "x-infra-api-key: sb_live_..." \\
+  -d '{
+    "content": "Analyze the impact of...",
+    "source": "Github-Action"
+  }'`}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-24 border-t border-border text-center bg-background transition-colors">
         <div className="max-w-7xl mx-auto px-6">
@@ -186,6 +252,7 @@ export default function WelcomePage() {
             <span className="font-black text-xl italic tracking-tighter text-foreground">CognitoFlow</span>
           </div>
           <div className="flex justify-center gap-12 mb-12">
+            <Link href="/about" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">About</Link>
             <Link href="#" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Privacy</Link>
             <Link href="#" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Terms</Link>
             <Link href="#" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Twitter</Link>
