@@ -451,7 +451,7 @@ export default function AutomationCanvas() {
                             zoomable 
                             pannable 
                             className="!bg-card !border-border rounded-2xl shadow-2xl" 
-                            maskColor="rgba(var(--background), 0.7)"
+                            maskColor="rgba(0, 0, 0, 0.1)"
                             nodeColor={(n) => {
                                 if (n.type === 'trigger') return '#ebcb8b';
                                 if (n.type === 'aiRouter') return '#5e81ac';
@@ -633,7 +633,7 @@ export default function AutomationCanvas() {
                         <div className="p-8 border-t border-border bg-muted/10">
                             <button 
                                 onClick={handleApplyChanges}
-                                className="w-full py-4 bg-foreground text-background dark:bg-white dark:text-black rounded-2xl text-sm font-black hover:opacity-90 transition-all shadow-xl active:scale-95"
+                                className="w-full py-4 bg-primary text-primary-foreground rounded-2xl text-sm font-black hover:opacity-90 transition-all shadow-xl active:scale-95"
                             >
                                 Apply Changes
                             </button>

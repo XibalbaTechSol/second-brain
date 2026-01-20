@@ -1,6 +1,7 @@
 import { DatabaseView } from '@/components/database/DatabaseView';
 import { prisma } from '@second-brain/database';
 import { notFound } from 'next/navigation';
+import { formatToMMDDYYYY } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export default async function DatabaseTypePage({ params }: { params: Promise<{ t
             name: item.content,
             tags: [item.status, item.source],
             status: item.status,
-            created: item.createdAt.toLocaleDateString(),
+            created: formatToMMDDYYYY(item.createdAt),
             type: 'INBOX_ITEM'
         }));
     } else {
@@ -72,7 +73,7 @@ export default async function DatabaseTypePage({ params }: { params: Promise<{ t
                 name: e.title,
                 tags: [e.type, ...(e.tags?.map(t => t.name) || [])],
                 status: e.status || 'Active',
-                created: e.createdAt.toLocaleDateString(),
+                created: formatToMMDDYYYY(e.createdAt),
                 type: e.type,
                 confidence: e.confidence,
                 
@@ -92,7 +93,7 @@ export default async function DatabaseTypePage({ params }: { params: Promise<{ t
                 
                 category: e.admin?.category,
                 importance: e.admin?.importance,
-                expiryDate: e.admin?.expiryDate?.toLocaleDateString(),
+                expiryDate: formatToMMDDYYYY(e.admin?.expiryDate),
 
                 metadata: {
                     person: e.person,

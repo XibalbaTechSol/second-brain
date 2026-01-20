@@ -34,27 +34,27 @@ export const MentionList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden w-64 p-1 z-50">
+    <div className="bg-card rounded-lg shadow-xl border border-border overflow-hidden w-64 p-1 z-50">
       {props.items.length ? (
         props.items.map((item: any, index: number) => (
           <button
             key={item.id}
             className={`flex items-center gap-3 w-full px-2 py-1.5 text-sm rounded-md transition-colors ${
-              index === selectedIndex ? 'bg-indigo-50 text-indigo-900' : 'text-gray-700 hover:bg-gray-50'
+              index === selectedIndex ? 'bg-primary text-primary-foreground font-bold' : 'text-foreground hover:bg-muted'
             }`}
             onClick={() => selectItem(index)}
           >
-            <div className="bg-indigo-100 text-indigo-600 p-1 rounded">
+            <div className={`p-1 rounded ${index === selectedIndex ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
               <Database className="w-3 h-3" />
             </div>
             <div className="text-left flex-1">
               <div className="font-medium truncate">{item.title}</div>
-              <div className="text-[10px] text-gray-400 uppercase font-bold">{item.type}</div>
+              <div className="text-[10px] opacity-60 uppercase font-bold tracking-widest">{item.type}</div>
             </div>
           </button>
         ))
       ) : (
-        <div className="px-3 py-2 text-sm text-gray-500 italic">No matching memories...</div>
+        <div className="px-3 py-2 text-sm text-muted-foreground italic">No matching memories...</div>
       )}
     </div>
   );

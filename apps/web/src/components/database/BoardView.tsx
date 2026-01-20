@@ -38,20 +38,20 @@ export const BoardView: React.FC<BoardViewProps> = ({ data, groupBy = 'status' }
     }, [data, groupBy]);
 
     return (
-        <div className="flex h-full overflow-x-auto p-4 gap-4 bg-gray-50/50 dark:bg-[#0a0a0a]">
+        <div className="flex h-full overflow-x-auto p-4 gap-4 bg-muted/20">
             {groups.map((group, groupIdx) => (
                 <div key={group.name || groupIdx} className="min-w-[260px] max-w-[260px] flex flex-col h-full">
                     {/* Column Header */}
                     <div className="flex items-center justify-between mb-3 px-1">
                         <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 text-xs font-semibold uppercase bg-gray-200 dark:bg-gray-800 rounded text-gray-600 dark:text-gray-400">
+                            <span className="px-2 py-0.5 text-xs font-semibold uppercase bg-muted rounded text-muted-foreground">
                                 {group.items.length}
                             </span>
-                            <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300">{group.name}</h3>
+                            <h3 className="font-medium text-sm text-foreground">{group.name}</h3>
                         </div>
                         <div className="flex gap-1">
-                            <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded text-gray-400"><Plus className="w-4 h-4" /></button>
-                            <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded text-gray-400"><MoreHorizontal className="w-4 h-4" /></button>
+                            <button className="p-1 hover:bg-muted rounded text-muted-foreground"><Plus className="w-4 h-4" /></button>
+                            <button className="p-1 hover:bg-muted rounded text-muted-foreground"><MoreHorizontal className="w-4 h-4" /></button>
                         </div>
                     </div>
 
@@ -60,39 +60,39 @@ export const BoardView: React.FC<BoardViewProps> = ({ data, groupBy = 'status' }
                         {group.items.map((item) => (
                             <div
                                 key={item.id}
-                                className="group bg-white dark:bg-[#1e1e1e] p-3 rounded-md shadow-sm border border-gray-200 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer select-none"
+                                className="group bg-card p-3 rounded-md shadow-sm border border-border hover:shadow-md transition-shadow cursor-pointer select-none"
                             >
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 leading-snug">
+                                <h4 className="text-sm font-medium text-foreground mb-2 leading-snug">
                                     {item.name}
                                 </h4>
 
                                 {/* Tags */}
                                 <div className="flex flex-wrap gap-1 mb-2">
                                     {item.tags?.map((tag: string, tagIdx: number) => (
-                                        <span key={`${tag}-${tagIdx}`} className="px-1.5 py-0.5 text-[10px] rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                                        <span key={`${tag}-${tagIdx}`} className="px-1.5 py-0.5 text-[10px] rounded bg-primary/10 text-primary border border-primary/20">
                                             {tag}
                                         </span>
                                     ))}
                                 </div>
 
                                 {/* Footer Metadata */}
-                                <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border">
                                     <span>{item.created}</span>
                                     {/* Placeholder for assignees or other icons */}
-                                    <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full" />
+                                    <div className="w-4 h-4 bg-muted rounded-full" />
                                 </div>
                             </div>
                         ))}
 
                         {/* New Item Button */}
-                        <button className="w-full flex items-center gap-2 p-2 rounded text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm">
+                        <button className="w-full flex items-center gap-2 p-2 rounded text-muted-foreground hover:bg-muted transition-colors text-sm">
                             <Plus className="w-4 h-4" /> New
                         </button>
                     </div>
                 </div>
             ))}
             <div className="min-w-[50px] pt-2">
-                <button className="flex items-center gap-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-sm">
+                <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm">
                     <Plus className="w-4 h-4" /> Add Group
                 </button>
             </div>

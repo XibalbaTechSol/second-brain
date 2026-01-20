@@ -34,17 +34,17 @@ export const CommandList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden w-64 p-1 z-50">
+    <div className="bg-card rounded-lg shadow-xl border border-border overflow-hidden w-64 p-1 z-50">
       {props.items.length ? (
         props.items.map((item: any, index: number) => (
           <button
             key={index}
             className={`flex items-center gap-3 w-full px-2 py-1.5 text-sm rounded-md transition-colors ${
-              index === selectedIndex ? 'bg-indigo-50 text-indigo-900' : 'text-gray-700 hover:bg-gray-50'
+              index === selectedIndex ? 'bg-primary text-primary-foreground font-bold' : 'text-foreground hover:bg-muted'
             }`}
             onClick={() => selectItem(index)}
           >
-            <div className="bg-white border border-gray-200 p-1 rounded shadow-sm">
+            <div className={`p-1 rounded shadow-sm border ${index === selectedIndex ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground' : 'bg-background border-border text-primary'}`}>
               {item.icon}
             </div>
             <div className="text-left">
@@ -53,7 +53,7 @@ export const CommandList = forwardRef((props: any, ref) => {
           </button>
         ))
       ) : (
-        <div className="px-3 py-2 text-sm text-gray-500">No result</div>
+        <div className="px-3 py-2 text-sm text-muted-foreground">No result</div>
       )}
     </div>
   );

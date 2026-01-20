@@ -5,11 +5,12 @@ import { TableView } from './TableView';
 import { CRMView } from './CRMView';
 import { SidePeek } from './SidePeek';
 import { LayoutGrid, List } from 'lucide-react';
+import { formatToMMDDYYYY } from '@/lib/date-utils';
 
 const MOCK_DATA = [
-    { id: '1', name: 'Project Alpha', tags: ['Work', 'Urgent'], status: 'In Progress', created: 'Oct 24, 2023', content: '<h3>Project Alpha</h3><p>Detailed notes for Alpha...</p>' },
-    { id: '2', name: 'Personal Goals', tags: ['Life'], status: 'Not Started', created: 'Oct 25, 2023', content: '<h3>Personal Goals</h3><ul><li>Goal 1</li><li>Goal 2</li></ul>' },
-    { id: '3', name: 'Q4 Review', tags: ['Work'], status: 'Done', created: 'Oct 26, 2023', content: '<h3>Q4 Review</h3><p>Everything went well.</p>' },
+    { id: '1', name: 'Project Alpha', tags: ['Work', 'Urgent'], status: 'In Progress', created: '10/24/2023', content: '<h3>Project Alpha</h3><p>Detailed notes for Alpha...</p>' },
+    { id: '2', name: 'Personal Goals', tags: ['Life'], status: 'Not Started', created: '10/25/2023', content: '<h3>Personal Goals</h3><ul><li>Goal 1</li><li>Goal 2</li></ul>' },
+    { id: '3', name: 'Q4 Review', tags: ['Work'], status: 'Done', created: '10/26/2023', content: '<h3>Q4 Review</h3><p>Everything went well.</p>' },
 ];
 
 interface DatabaseViewProps {
@@ -63,7 +64,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ initialData, viewTit
             name: 'Untitled',
             tags: [viewType],
             status: 'Active',
-            created: new Date().toLocaleDateString(),
+            created: formatToMMDDYYYY(new Date()),
             content: ''
         };
 
@@ -117,33 +118,33 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ initialData, viewTit
         columns.push({ id: 'outcome', name: 'Outcome', type: 'text' });
     }
 
-    columns.push({ id: 'created', name: 'Created', type: 'text' });
+    columns.push({ id: 'created', name: 'Created', type: 'date' });
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-100 relative">
+        <div className="flex flex-col h-full bg-background text-foreground relative">
             {/* Header / Toolbar Area */}
-            <div className="px-5 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-[#121212] z-20">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between bg-background z-20">
                 <h1 className="text-xl font-semibold">{viewTitle}</h1>
                 <div className="flex items-center gap-4">
                     {viewType === 'PERSON' && (
-                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                        <div className="flex bg-muted p-1 rounded-lg">
                             <button 
                                 onClick={() => setViewMode('crm')}
-                                className={`p-1.5 rounded-md ${viewMode === 'crm' ? 'bg-white dark:bg-[#1a1a1a] shadow-sm' : ''}`}
+                                className={`p-1.5 rounded-md ${viewMode === 'crm' ? 'bg-card shadow-sm' : ''}`}
                             >
-                                <LayoutGrid className="w-4 h-4 text-gray-600" />
+                                <LayoutGrid className="w-4 h-4 text-muted-foreground" />
                             </button>
                             <button 
                                 onClick={() => setViewMode('table')}
-                                className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white dark:bg-[#1a1a1a] shadow-sm' : ''}`}
+                                className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-card shadow-sm' : ''}`}
                             >
-                                <List className="w-4 h-4 text-gray-600" />
+                                <List className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </div>
                     )}
-                    <div className="flex gap-2 text-sm text-gray-500">
-                        <button className="hover:text-gray-800 dark:hover:text-gray-300 transition-colors">Sort</button>
-                        <button className="hover:text-gray-800 dark:hover:text-gray-300 transition-colors">Filter</button>
+                    <div className="flex gap-2 text-sm text-muted-foreground">
+                        <button className="hover:text-foreground transition-colors px-2 py-1 hover:bg-muted rounded-md">Sort</button>
+                        <button className="hover:text-foreground transition-colors px-2 py-1 hover:bg-muted rounded-md">Filter</button>
                     </div>
                 </div>
             </div>

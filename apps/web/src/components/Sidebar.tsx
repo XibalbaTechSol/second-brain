@@ -28,8 +28,8 @@ export default function Sidebar() {
     <div className="w-60 bg-card dark:bg-background h-screen flex flex-col border-r border-border transition-all group/sidebar">
       {/* Header / User Profile */}
       <div className="p-3 mb-1">
-        <Link href="/settings" className="flex items-center gap-2 px-3 py-1 rounded hover:bg-muted dark:hover:bg-muted cursor-pointer transition-colors duration-200">
-          <div className="w-5 h-5 bg-muted dark:bg-card flex items-center justify-center rounded text-xs font-semibold text-foreground">
+        <Link href="/settings" className="flex items-center gap-2 px-3 py-1 rounded hover:bg-muted cursor-pointer transition-colors duration-200">
+          <div className="w-5 h-5 bg-muted flex items-center justify-center rounded text-xs font-semibold text-foreground">
             {userInitial}
           </div>
           <span className="font-medium text-sm text-foreground truncate flex-1">

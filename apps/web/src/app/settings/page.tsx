@@ -14,9 +14,9 @@ function CalendarSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
+    <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+        <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
           <Calendar className="w-5 h-5 text-aurora-orange" /> Calendar Integration
         </h3>
         <div className="bg-aurora-green/10 text-aurora-green text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Connected</div>
@@ -39,7 +39,7 @@ function CalendarSettings() {
           </div>
 
           <div className="flex-1 text-center md:text-left relative z-10">
-            <h4 className="text-2xl font-black italic tracking-tight mb-2">Google Calendar</h4>
+            <h4 className="text-2xl font-black italic tracking-tight mb-2 text-foreground">Google Calendar</h4>
             <p className="text-muted-foreground text-sm font-medium mb-6">Synchronize your behavioral nudges and goals with your primary calendar.</p>
             
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
@@ -49,7 +49,7 @@ function CalendarSettings() {
               >
                 Configure Sync
               </button>
-              <button className="bg-muted text-foreground px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-border transition-all">
+              <button className="bg-muted text-foreground px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-border transition-all border border-border">
                 Disconnect
               </button>
             </div>
@@ -113,11 +113,11 @@ function InfraSettings() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading infrastructure data...</div>;
+  if (loading) return <div className="text-center py-20 text-muted-foreground italic font-medium">Loading infrastructure data...</div>;
 
   return (
-    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
-      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
+    <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
+      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
         <Globe className="w-5 h-5 text-primary" /> API & Infrastructure
       </h3>
 
@@ -147,7 +147,7 @@ function InfraSettings() {
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-gray-900 dark:text-white ml-1">Sample Request</h4>
+          <h4 className="text-sm font-bold text-foreground ml-1 uppercase tracking-widest opacity-60">Sample Request</h4>
           <pre className="bg-[#2e3440] text-[#d8dee9] p-6 rounded-2xl text-[11px] overflow-x-auto shadow-inner border border-black/20">
 {`curl -X POST http://localhost:3000/api/infra/v1/capture \\
   -H "Content-Type: application/json" \\
@@ -196,32 +196,32 @@ function SubscriptionTab() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Fetching subscription status...</div>;
+  if (loading) return <div className="text-center py-20 text-muted-foreground font-medium italic">Fetching subscription status...</div>;
 
   return (
-    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
-      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
-        <CreditCard className="w-5 h-5 text-indigo-500" /> Current Plan
+    <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
+      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
+        <CreditCard className="w-5 h-5 text-primary" /> Current Plan
       </h3>
 
-      <div className="bg-indigo-600 rounded-[2rem] p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-indigo-600/20">
+      <div className="bg-primary rounded-[2rem] p-8 text-primary-foreground relative overflow-hidden mb-8 shadow-xl shadow-primary/20">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <BrainCircuit className="w-32 h-32" />
         </div>
         
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{sub.tier}</span>
-            {sub.tier === 'FREE' && <span className="text-sm font-medium italic">Active Free Trial</span>}
+            <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white">{sub.tier}</span>
+            {sub.tier === 'FREE' && <span className="text-sm font-medium italic text-white/90">Active Free Trial</span>}
           </div>
           <h4 className="text-3xl font-black mb-2 italic tracking-tight">Cognito {sub.tier === 'FREE' ? 'Pro' : sub.tier}</h4>
-          <p className="text-indigo-100 text-sm mb-6">Full access to behavior-changing AI reasoning engine.</p>
+          <p className="opacity-80 text-sm mb-6">Full access to behavior-changing AI reasoning engine.</p>
           
           {sub.tier === 'FREE' && (
             <button 
               onClick={() => handleUpgrade('PRO', 'price_mock_pro')}
               disabled={!!upgrading}
-              className="bg-white text-indigo-600 px-6 py-2.5 rounded-xl font-black text-sm hover:bg-indigo-50 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+              className="bg-white text-primary px-6 py-2.5 rounded-xl font-black text-sm hover:bg-opacity-90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
             >
               {upgrading === 'PRO' ? 'Initializing...' : 'Upgrade to Pro ($49/mo)'}
             </button>
@@ -230,8 +230,8 @@ function SubscriptionTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400">
-          <h4 className="font-bold text-gray-900 dark:text-white">Why Cognito Pro?</h4>
+        <div className="space-y-4 text-sm text-muted-foreground">
+          <h4 className="font-bold text-foreground uppercase text-xs tracking-widest">Why Cognito Pro?</h4>
           <ul className="space-y-3">
             {[
               'Gemini 2.0 Flash Reasoning',
@@ -290,12 +290,12 @@ function AISettings() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-gray-400">Loading synaptic configuration...</div>;
+  if (loading) return <div className="text-center py-20 text-muted-foreground italic font-medium">Loading synaptic configuration...</div>;
 
   return (
-    <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
-      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
-        <Zap className="w-5 h-5 text-indigo-500" /> AI Engine Configuration
+    <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
+      <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
+        <Zap className="w-5 h-5 text-primary" /> AI Engine Configuration
       </h3>
 
       <div className="space-y-6">
@@ -315,7 +315,7 @@ function AISettings() {
         <div className="space-y-2">
           <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Gemini API Key</label>
           <div className="relative">
-            <Shield className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Shield className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
             <input 
               type="password" 
               value={settings.geminiApiKey || ''}
@@ -324,10 +324,10 @@ function AISettings() {
               className="w-full bg-background border border-border rounded-2xl py-3 pl-12 pr-4 text-foreground font-medium focus:ring-2 focus:ring-primary outline-none transition-all shadow-inner"
             />
           </div>
-          <p className="text-[10px] text-gray-500 mt-2 ml-1 italic font-medium">Your key is stored securely and never shared. Get one at <a href="https://aistudio.google.com/" target="_blank" className="text-primary hover:underline">Google AI Studio</a>.</p>
+          <p className="text-[10px] text-muted-foreground mt-2 ml-1 italic font-medium">Your key is stored securely and never shared. Get one at <a href="https://aistudio.google.com/" target="_blank" className="text-primary hover:underline">Google AI Studio</a>.</p>
         </div>
 
-        <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-4 items-center">
+        <div className="pt-6 border-t border-border flex justify-end gap-4 items-center">
           {settings.aiProvider === 'OLLAMA' && (
             <span className="text-[10px] font-bold text-aurora-orange uppercase tracking-tighter bg-aurora-orange/10 px-2 py-1 rounded">Ensure Ollama is running locally</span>
           )}
@@ -353,8 +353,8 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto p-8 pt-12">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your brain's configuration and subscription.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-2">Manage your brain's configuration and subscription.</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
@@ -374,8 +374,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -388,50 +388,50 @@ export default function SettingsPage() {
         <main className="flex-1">
           {activeTab === 'profile' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="bg-white dark:bg-[#121212] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
-                  <User className="w-5 h-5 text-indigo-500" /> Public Profile
+              <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
+                <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
+                  <User className="w-5 h-5 text-primary" /> Public Profile
                 </h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-6 mb-8">
-                    <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-3xl flex items-center justify-center text-3xl font-bold text-indigo-600 dark:text-indigo-400 border-2 border-indigo-50 dark:border-indigo-900/20 shadow-inner">
+                    <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-3xl font-bold text-primary border-2 border-primary/20 shadow-inner">
                       {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <button className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-50 dark:hover:bg-black transition-colors text-gray-900 dark:text-white">
+                      <button className="bg-background border border-border px-4 py-2 rounded-xl text-sm font-bold hover:bg-muted transition-colors text-foreground">
                         Change Avatar
                       </button>
-                      <p className="text-xs text-gray-500 mt-2">JPG, GIF or PNG. Max size of 800K</p>
+                      <p className="text-xs text-muted-foreground mt-2">JPG, GIF or PNG. Max size of 800K</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-400 uppercase ml-1">Full Name</label>
+                      <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Full Name</label>
                       <input 
                         type="text" 
                         defaultValue={user?.name || ''} 
-                        className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none text-foreground"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-400 uppercase ml-1">Email Address</label>
+                      <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Email Address</label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input 
                           type="email" 
                           disabled 
                           defaultValue={user?.email || ''} 
-                          className="w-full bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-10 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+                          className="w-full bg-muted border border-border rounded-xl px-10 py-2.5 text-sm text-muted-foreground cursor-not-allowed opacity-60"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">
-                  <button className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20">
+                <div className="mt-8 pt-6 border-t border-border flex justify-end">
+                  <button className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20">
                     Save Changes
                   </button>
                 </div>

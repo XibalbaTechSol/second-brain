@@ -84,18 +84,9 @@ export default function Editor({ content, onChange }: { content: string, onChang
   }
 
   return (
-    <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden relative">
+    <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden relative">
       
-      {/* BUBBLE MENU REMOVED TEMPORARILY */}
-      {/* 
-      {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex bg-white shadow-xl border border-gray-200 rounded-lg overflow-hidden divide-x divide-gray-100">
-          ...
-        </BubbleMenu>
-      )} 
-      */}
-
-      <EditorContent editor={editor} className="font-sans editor-container" />
+      <EditorContent editor={editor} className="font-sans editor-container text-foreground" />
       
       {/* GLOBAL STYLES FOR NOTION LOOK */}
       <style jsx global>{`
@@ -117,7 +108,8 @@ export default function Editor({ content, onChange }: { content: string, onChang
           position: absolute;
           left: -1.5rem;
           top: 0.2rem;
-          color: #cbd5e1;
+          color: var(--muted-foreground);
+          opacity: 0.4;
           font-size: 1.2rem;
           cursor: grab;
           transition: color 0.2s;
@@ -129,17 +121,19 @@ export default function Editor({ content, onChange }: { content: string, onChang
         .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
-          color: #adb5bd;
+          color: var(--muted-foreground);
+          opacity: 0.4;
           pointer-events: none;
           height: 0;
         }
 
         /* Mentions / Links */
         .mention {
-          background-color: #eef2ff;
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          opacity: 0.9;
           border-radius: 0.4rem;
           box-decoration-break: clone;
-          color: #4f46e5;
           padding: 0.1rem 0.3rem;
           font-weight: 600;
           cursor: pointer;
@@ -166,18 +160,19 @@ export default function Editor({ content, onChange }: { content: string, onChang
 
         /* Code Block */
         pre {
-          background: #f8f9fa;
+          background: #2e3440;
           border-radius: 0.5rem;
-          color: #343a40;
+          color: #d8dee9;
           font-family: 'JetBrains Mono', monospace;
           padding: 0.75rem 1rem;
         }
 
         /* Blockquote */
         blockquote {
-          border-left: 3px solid #e2e8f0;
+          border-left: 3px solid var(--primary);
           padding-left: 1rem;
-          color: #64748b;
+          color: var(--muted-foreground);
+          font-style: italic;
         }
         
         /* Headers */

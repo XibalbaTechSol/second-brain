@@ -1,5 +1,6 @@
 import { DatabaseView } from '@/components/database/DatabaseView';
 import { prisma } from '@second-brain/database';
+import { formatToMMDDYYYY } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,7 @@ export default async function DatabasesPage() {
     role: e.person?.role,
     company: e.person?.company,
     outcome: e.project?.outcome,
-    created: e.createdAt.toLocaleDateString(),
+    created: formatToMMDDYYYY(e.createdAt),
     type: e.type,
     metadata: {
         person: e.person,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Plus, MoreHorizontal, GripVertical, X, Maximize2, ExternalLink } from 'lucide-react';
+import { formatToMMDDYYYY, formatToISO } from '@/lib/date-utils';
 import {
   DndContext,
   closestCenter,
@@ -40,7 +41,7 @@ interface TableViewProps {
   onOpenPage?: (row: Row) => void;
 }
 
-const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, setEditValue, handleBlur, handleKeyDown, inputRef, onOpenPage }: any) => {
+const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, setEditValue, handleBlur, handleKeyDown, inputRef, onOpenPage, onUpdateRow }: any) => {
   const {
     attributes,
     listeners,
@@ -49,6 +50,12 @@ const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, 
     transition,
     isDragging
   } = useSortable({ id: row.id });
+
+  const handleRemoveTag = (propId: string, tagToRemove: string) => {
+    const currentTags = row[propId] || [];
+    const newTags = currentTags.filter((t: string) => t !== tagToRemove);
+    onUpdateRow?.(row.id, { [propId]: newTags });
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -61,10 +68,10 @@ const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, 
     <tr 
       ref={setNodeRef} 
       style={style}
-      className="group hover:bg-gray-50 dark:hover:bg-[#1f1f1f] transition-colors h-10 border-b border-gray-100 dark:border-gray-800"
+      className="group hover:bg-muted/50 transition-colors h-10 border-b border-border"
     >
       <td className="w-8 pl-2 text-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-        <GripVertical className="w-3.5 h-3.5 text-gray-400" />
+        <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
       </td>
       {properties.map((prop: any, propIndex: number) => {
         const isEditing = editingCell?.rowId === row.id && editingCell?.propId === prop.id;
@@ -73,10 +80,10 @@ const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, 
         return (
           <td
             key={`${row.id}-${prop.id}`}
-            className="px-3 py-1 border-r border-gray-100 dark:border-gray-800 last:border-r-0 relative cursor-text min-w-[150px]"
+            className="px-3 py-1 border-r border-border last:border-r-0 relative cursor-text min-w-[150px]"
             onClick={() => !isEditing && (isName ? onOpenPage(row) : setEditingCell({ rowId: row.id, propId: prop.id }))}
           >
-            <div className={`truncate max-w-[300px] text-gray-800 dark:text-gray-200 min-h-[20px] flex items-center ${isName ? 'font-medium hover:underline cursor-pointer' : ''}`}>
+            <div className={`truncate max-w-[300px] text-foreground min-h-[20px] flex items-center ${isName ? 'font-medium hover:underline cursor-pointer' : ''}`}>
               {isEditing ? (
                 prop.type === 'select' || prop.id === 'status' ? (
                   <select
@@ -84,7 +91,7 @@ const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, 
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={handleBlur}
-                    className="w-full h-full bg-white dark:bg-[#2a2a2a] outline-none px-1 rounded shadow-sm border border-blue-400 text-sm"
+                    className="w-full h-full bg-card outline-none px-1 rounded shadow-sm border border-primary text-sm text-foreground"
                   >
                     {/* Common Options */}
                     {prop.id === 'status' && (
@@ -121,17 +128,18 @@ const SortableRow = ({ row, properties, editingCell, setEditingCell, editValue, 
                 ) : (
                   <input
                     ref={inputRef}
-                    value={editValue}
+                    type={prop.type === 'date' ? 'date' : 'text'}
+                    value={prop.type === 'date' ? formatToISO(editValue) : editValue}
                     autoFocus
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    className="w-full h-full bg-white dark:bg-[#2a2a2a] outline-none px-1 rounded shadow-sm border border-blue-400 text-sm"
+                    className="w-full h-full bg-card outline-none px-1 rounded shadow-sm border border-primary text-sm text-foreground"
                     placeholder={prop.type === 'multi-select' ? "Tag1, Tag2..." : ""}
                   />
                 )
               ) : (
-                renderCell(prop, row[prop.id])
+                renderCell(prop, row[prop.id], (tag) => handleRemoveTag(prop.id, tag))
               )}
             </div>
           </td>
@@ -176,6 +184,8 @@ export const TableView: React.FC<TableViewProps> = ({ properties, data, onUpdate
       let finalValue: any = editValue;
       if (prop?.type === 'multi-select') {
         finalValue = editValue.split(',').map(s => s.trim()).filter(s => s);
+      } else if (prop?.type === 'date') {
+        finalValue = formatToMMDDYYYY(editValue);
       }
       onUpdateRow?.(editingCell.rowId, { [editingCell.propId]: finalValue });
       setEditingCell(null);
@@ -199,14 +209,14 @@ export const TableView: React.FC<TableViewProps> = ({ properties, data, onUpdate
   return (
     <div className="relative h-full flex flex-col">
       {isMounted && (
-        <div className="w-full overflow-x-auto border-t border-gray-200 dark:border-gray-800 flex-1">
+        <div className="w-full overflow-x-auto border-t border-border flex-1">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <table className="min-w-full text-left text-sm border-collapse">
-              <thead className="bg-gray-50 dark:bg-[#191919] sticky top-0 z-10">
-                <tr className="border-b border-gray-200 dark:border-gray-800 h-10">
+              <thead className="bg-muted/30 sticky top-0 z-10">
+                <tr className="border-b border-border h-10">
                   <th className="w-8"></th>
                   {properties.map((prop) => (
-                    <th key={prop.id} className="px-3 py-2 font-normal text-gray-500 border-r border-gray-200 dark:border-gray-800 last:border-r-0 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer select-none">
+                    <th key={prop.id} className="px-3 py-2 font-normal text-muted-foreground border-r border-border last:border-r-0 hover:bg-muted/50 cursor-pointer select-none">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] uppercase font-bold opacity-50">{prop.type}</span>
                         <span>{prop.name}</span>
@@ -216,7 +226,7 @@ export const TableView: React.FC<TableViewProps> = ({ properties, data, onUpdate
                   <th className="w-10"></th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#121212]">
+              <tbody className="bg-background">
                 <SortableContext items={data.map(r => r.id)} strategy={verticalListSortingStrategy}>
                   {data.map((row) => (
                     <SortableRow 
@@ -231,16 +241,17 @@ export const TableView: React.FC<TableViewProps> = ({ properties, data, onUpdate
                       handleKeyDown={handleKeyDown}
                       inputRef={inputRef}
                       onOpenPage={onOpenPage || setActivePage}
+                      onUpdateRow={onUpdateRow}
                     />
                   ))}
                 </SortableContext>
                 <tr 
-                  className="hover:bg-gray-50 dark:hover:bg-[#1f1f1f] cursor-pointer h-10 group"
+                  className="hover:bg-muted/30 cursor-pointer h-10 group"
                   onClick={onCreateRow}
                 >
-                  <td colSpan={properties.length + 2} className="px-10 text-gray-400 flex items-center gap-2 select-none h-full py-3">
+                  <td colSpan={properties.length + 2} className="px-10 text-muted-foreground flex items-center gap-2 select-none h-full py-3">
                     <Plus className="w-4 h-4" />
-                    <span className="group-hover:text-gray-600 transition-colors font-medium">New</span>
+                    <span className="group-hover:text-foreground transition-colors font-medium">New</span>
                   </td>
                 </tr>
               </tbody>
@@ -253,8 +264,8 @@ export const TableView: React.FC<TableViewProps> = ({ properties, data, onUpdate
   );
 };
 
-const renderCell = (property: Property, value: any) => {
-  if (!value && value !== 0) return <span className="text-gray-300 dark:text-gray-600 italic">Empty</span>;
+const renderCell = (property: Property, value: any, onRemoveTag?: (tag: string) => void) => {
+  if (!value && value !== 0) return <span className="text-muted-foreground/40 italic">Empty</span>;
 
   switch (property.type) {
     case 'multi-select':
@@ -263,17 +274,34 @@ const renderCell = (property: Property, value: any) => {
           {Array.isArray(value) && value.map((tag: string, tagIdx: number) => (
             <span
               key={`${tag}-${tagIdx}`}
-              className="px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-primary/10 text-primary border border-primary/20 group/tag"
             >
-              {tag}
+              <span>{tag}</span>
+              {onRemoveTag && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveTag(tag);
+                  }}
+                  className="opacity-0 group-hover/tag:opacity-100 hover:bg-primary/20 rounded-sm p-0.25 transition-all"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
             </span>
           ))}
         </div>
       );
     case 'select':
       return (
-        <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+        <span className="px-1.5 py-0.5 rounded text-xs bg-aurora-green/10 text-aurora-green border border-aurora-green/20">
           {value}
+        </span>
+      );
+    case 'date':
+      return (
+        <span className="text-xs">
+          {formatToMMDDYYYY(value)}
         </span>
       );
     default:
