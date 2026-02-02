@@ -1,12 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrainCircuit, Zap, Shield, Smartphone, ArrowRight, Network, Sparkles, Check, Globe, BarChart3, Lock } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
-import { useSession } from 'next-auth/react';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export default function WelcomePage() {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 transition-colors duration-300">
@@ -28,7 +35,7 @@ export default function WelcomePage() {
             <Link href="#api" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">API</Link>
             <div className="h-6 w-[1px] bg-border" />
             <ThemeToggle />
-            {session ? (
+            {user ? (
               <Link href="/dashboard" className="bg-primary text-primary-foreground px-10 py-3.5 rounded-2xl font-black uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95">
                 Dashboard
               </Link>
@@ -62,8 +69,8 @@ export default function WelcomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href={session ? "/dashboard" : "/login"} className="w-full sm:w-auto bg-primary text-primary-foreground px-10 py-5 rounded-2xl text-xl font-black hover:opacity-90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group">
-                {session ? "Enter Brain" : "Start 7-Day Free Trial"} <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <Link href={user ? "/dashboard" : "/login"} className="w-full sm:w-auto bg-primary text-primary-foreground px-10 py-5 rounded-2xl text-xl font-black hover:opacity-90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group">
+                {user ? "Enter Brain" : "Start 7-Day Free Trial"} <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Link>
               <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium px-6 py-2 border border-border rounded-2xl bg-card/50">
                 <Lock className="w-4 h-4" />

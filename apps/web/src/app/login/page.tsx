@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrainCircuit, Mail, Lock, ArrowRight, Github, Sparkles, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+import { createClient } from '@/lib/supabase/client';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
@@ -12,22 +12,35 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    const result = await signIn('credentials', {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      redirect: false
     });
 
-    if (result?.ok) {
+    if (!error) {
       router.push('/dashboard');
+      router.refresh();
     } else {
-      alert('Authentication failed. Please check your credentials.');
+      alert('Authentication failed: ' + error.message);
       setLoading(false);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      alert(error.message);
     }
   };
 
@@ -117,7 +130,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button className="w-full bg-muted/50 border border-border text-foreground font-bold py-4 rounded-2xl hover:bg-muted transition-all flex items-center justify-center gap-3 group">
+          <button
+            onClick={handleGithubLogin}
+            className="w-full bg-muted/50 border border-border text-foreground font-bold py-4 rounded-2xl hover:bg-muted transition-all flex items-center justify-center gap-3 group"
+          >
             <Github className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Continue with GitHub
           </button>

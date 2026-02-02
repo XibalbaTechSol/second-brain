@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
-import { getServerSession } from "next-auth/next";
+import { getUser } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
-    const session = await getServerSession() as any;
-    if (!session?.user) {
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const entities = await prisma.entity.findMany({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       orderBy: { updatedAt: 'desc' },
       include: {
         project: true,
@@ -30,8 +30,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession() as any;
-    if (!session?.user) {
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         content: content || '',
         status: status || 'Active',
         confidence: 1.0, // Manual creation
-        userId: session.user.id,
+        userId: user.id,
         
         // Initialize empty metadata based on type
         project: type === 'PROJECT' ? { create: { status: 'Active' } } : undefined,

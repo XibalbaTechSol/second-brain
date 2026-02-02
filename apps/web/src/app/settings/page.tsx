@@ -3,13 +3,14 @@
 import { useSession } from 'next-auth/react';
 import { User, Mail, CreditCard, Shield, Bell, Zap, BrainCircuit, Check, Calendar, Globe } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 function CalendarSettings() {
-  const { data: session } = useSession();
   const [isSyncing, setIsSyncing] = useState(false);
 
   const handleConnect = () => {
-    // In a real app, this would trigger NextAuth Google login with specific scopes
+    // In a real app, this would trigger Google login with specific scopes
     alert('This would trigger Google OAuth flow with Calendar permissions.');
   };
 
@@ -345,10 +346,13 @@ function AISettings() {
 }
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
+  const supabase = createClient();
 
-  const user = session?.user;
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-8 pt-12">
@@ -396,7 +400,7 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-3xl font-bold text-primary border-2 border-primary/20 shadow-inner">
-                      {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
+                      {user?.user_metadata?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
                     </div>
                     <div>
                       <button className="bg-background border border-border px-4 py-2 rounded-xl text-sm font-bold hover:bg-muted transition-colors text-foreground">
@@ -411,7 +415,7 @@ export default function SettingsPage() {
                       <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Full Name</label>
                       <input 
                         type="text" 
-                        defaultValue={user?.name || ''} 
+                        defaultValue={user?.user_metadata?.name || ''}
                         className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none text-foreground"
                       />
                     </div>
