@@ -1,0 +1,21 @@
+
+> web@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.1.7
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1855ms
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 1404ms (149 modules)
+ ○ Compiling /login ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (133kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled /login in 7.6s (818 modules)
+ GET /login 200 in 8483ms
+ ○ Compiling / ...
+ ✓ Compiled / in 767ms (826 modules)
+ GET / 200 in 1011ms
+[?25h

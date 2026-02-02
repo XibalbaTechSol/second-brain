@@ -1,12 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BrainCircuit, Target, Lightbulb, Zap, ArrowRight, ShieldCheck, Heart, Users } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
-import { useSession } from 'next-auth/react';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export default function AboutPage() {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -28,7 +35,7 @@ export default function AboutPage() {
             <Link href="/#api" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">API</Link>
             <div className="h-6 w-[1px] bg-border" />
             <ThemeToggle />
-            {session ? (
+            {user ? (
               <Link href="/dashboard" className="bg-primary text-primary-foreground px-10 py-3.5 rounded-2xl font-black uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-xl shadow-primary/20">
                 Dashboard
               </Link>

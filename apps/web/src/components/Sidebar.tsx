@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Inbox, Zap, Database, Users, FolderKanban, Lightbulb, Building, BrainCircuit, Settings, LogOut, Clock, Calendar } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
 import ThemeToggle from './ThemeToggle';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
@@ -20,9 +22,32 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
 
-  const userInitial = session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || '?';
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
+
+  const userInitial = user?.email?.[0]?.toUpperCase() || '?';
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0];
 
   return (
     <div className="w-60 bg-card dark:bg-background h-screen flex flex-col border-r border-border transition-all group/sidebar">
@@ -33,7 +58,7 @@ export default function Sidebar() {
             {userInitial}
           </div>
           <span className="font-medium text-sm text-foreground truncate flex-1">
-            {session?.user?.name || session?.user?.email?.split('@')[0]}
+            {userName}
           </span>
         </Link>
         
@@ -73,7 +98,7 @@ export default function Sidebar() {
           <span className="text-sm font-medium">Settings</span>
         </Link>
         <button 
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="flex items-center gap-2.5 px-3 py-1 rounded text-muted-foreground hover:bg-aurora-red/10 hover:text-aurora-red w-full transition-colors min-h-[30px]"
         >
           <LogOut className="w-[18px] h-[18px] opacity-70" strokeWidth={1.5} />

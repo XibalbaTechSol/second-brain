@@ -1,15 +1,14 @@
 'use server';
 
 import { prisma } from '@second-brain/database';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getUser } from '@/lib/auth-helpers';
 
 export async function saveWorkflow(nodes: any[], edges: any[]) {
-    const session = await getServerSession(authOptions) as any;
-    if (!session?.user) {
+    const user = await getUser();
+    if (!user) {
         throw new Error('Unauthorized');
     }
-    const userId = session.user.id;
+    const userId = user.id;
 
     console.log(`Saving workflow for user ${userId}...`, nodes.length, edges.length);
 
