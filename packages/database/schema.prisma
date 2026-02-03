@@ -16,11 +16,12 @@ generator client {
 
 // --- 0. AUTH & SaaS ---
 model User {
-  id            String    @id // Synced from auth.users
+  id            String    @id @default(cuid()) // Synced from auth.users
   name          String?   @default("New User")
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
