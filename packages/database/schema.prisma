@@ -19,6 +19,7 @@ model User {
   id            String    @id // Synced from auth.users
   name          String?   @default("New User")
   email         String?   @unique
+  password      String?
   emailVerified DateTime?
   image         String?
   
