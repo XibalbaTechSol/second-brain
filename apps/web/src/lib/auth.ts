@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@second-brain/database";
+import { compare } from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -23,26 +24,26 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
 
-        // "Ignore security" - auto create or just find
-        let user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.email.split('@')[0],
-              trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
-              subscription: {
-                create: {
-                  tier: 'FREE'
-                }
-              }
-            }
-          });
+        if (!user || !user.password) {
+          // If user not found, or user exists but has no password (e.g. OAuth only),
+          // we treat it as invalid credentials to avoid enumeration.
+          // Note: In a real app, you might want to tell OAuth users to sign in with that provider.
+          // For now, simple "Invalid credentials" is safer.
+          throw new Error("Invalid credentials");
+        }
+
+        const isValid = await compare(credentials.password, user.password);
+
+        if (!isValid) {
+          throw new Error("Invalid credentials");
         }
 
         return user;
