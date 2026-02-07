@@ -13,7 +13,7 @@ export async function GET() {
       where: {
         OR: [
           { workflow: { userId: user.id } },
-          { entityId: { in: (await prisma.entity.findMany({ where: { userId: user.id }, select: { id: true } })).map(e => e.id) } }
+          { entityId: { in: (await prisma.entity.findMany({ where: { userId: user.id }, select: { id: true } })).map((e: { id: string }) => e.id) } }
         ]
       },
       orderBy: { timestamp: 'desc' },
