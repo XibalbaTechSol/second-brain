@@ -54,7 +54,7 @@ export default async function EntityPage({ params }: { params: Promise<{ type: s
 
                         <div className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Tags</div>
                         <div className="flex gap-2">
-                            {entity.tags.map(t => (
+                            {entity.tags.map((t: any) => (
                                 <span key={t.id} className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs border border-primary/20">
                                     {t.name}
                                 </span>

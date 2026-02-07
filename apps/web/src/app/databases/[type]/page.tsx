@@ -46,7 +46,7 @@ export default async function DatabaseTypePage({ params }: { params: Promise<{ t
             orderBy: { createdAt: 'desc' },
             take: 50 // Limit to 50 for performance
         });
-        data = inboxItems.map(item => ({
+        data = inboxItems.map((item: any) => ({
             id: item.id,
             name: item.content,
             tags: [item.status, item.source],
@@ -67,11 +67,11 @@ export default async function DatabaseTypePage({ params }: { params: Promise<{ t
             }
         });
 
-        data = entities.map(e => {
+        data = entities.map((e: any) => {
             return {
                 id: e.id,
                 name: e.title,
-                tags: [e.type, ...(e.tags?.map(t => t.name) || [])],
+                tags: [e.type, ...(e.tags?.map((t: any) => t.name) || [])],
                 status: e.status || 'Active',
                 created: formatToMMDDYYYY(e.createdAt),
                 type: e.type,

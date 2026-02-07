@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
     // 3. Rank by Similarity
     const results = entities
-      .map(entity => {
+        .map((entity: any) => {
         if (!entity.embedding) return null;
         try {
           const vector = JSON.parse(entity.embedding);
@@ -56,8 +56,8 @@ export async function GET(request: Request) {
           return null;
         }
       })
-      .filter((e): e is NonNullable<typeof e> => e !== null)
-      .sort((a, b) => b.score - a.score) // Descending
+      .filter((e: any) => e !== null)
+      .sort((a: any, b: any) => b.score - a.score) // Descending
       .slice(0, 10); // Top 10
 
     return NextResponse.json(results);
