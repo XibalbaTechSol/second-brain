@@ -1,0 +1,4 @@
+## 2024-05-23 - Critical Authentication Bypass
+**Vulnerability:** The `CredentialsProvider` in `apps/web/src/lib/auth.ts` was configured to ignore passwords entirely, allowing anyone to log in as any user by providing their email address. This was likely intended for development convenience but posed a critical risk if deployed to production.
+**Learning:** "Ignore security" code blocks for development convenience are extremely dangerous if not strictly isolated. They can easily be deployed to production by accident.
+**Prevention:** Never commit code that bypasses authentication checks without strict environment guards (e.g., `if (process.env.NODE_ENV !== 'development') return null;`). Ideally, use distinct authentication strategies for development and production that are configured at the infrastructure level, or use seed scripts for development data instead of bypassing auth logic.
