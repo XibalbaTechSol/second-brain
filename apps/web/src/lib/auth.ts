@@ -23,6 +23,10 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        if (process.env.NODE_ENV !== 'development') {
+          throw new Error("Credentials login is only available in development mode.");
+        }
+
         if (!credentials?.email) return null;
 
         // "Ignore security" - auto create or just find
