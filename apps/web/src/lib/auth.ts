@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@second-brain/database";
+import { randomUUID } from "crypto";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -16,38 +17,42 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
+    // 🛡️ Sentinel: Only allow Credentials login (which ignores password!) in development
+    ...(process.env.NODE_ENV === "development" ? [
+      CredentialsProvider({
+        name: "Credentials",
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" }
+        },
+        async authorize(credentials) {
+          if (!credentials?.email) return null;
 
-        // "Ignore security" - auto create or just find
-        let user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
+          // "Ignore security" - auto create or just find
+          let user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.email.split('@')[0],
-              trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
-              subscription: {
-                create: {
-                  tier: 'FREE'
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                id: randomUUID(),
+                email: credentials.email,
+                name: credentials.email.split('@')[0],
+                trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
+                subscription: {
+                  create: {
+                    tier: 'FREE'
+                  }
                 }
               }
-            }
-          });
-        }
+            });
+          }
 
-        return user;
-      }
-    })
+          return user;
+        }
+      })
+    ] : [])
   ],
   session: {
     strategy: "jwt"
