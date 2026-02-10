@@ -14,9 +14,29 @@ sleep 3
 # 2. Environment Verification
 echo "🔐 Checking environment files..."
 if [ ! -f ".env" ]; then
-    echo "⚠️  Root .env missing. Creating from keys..."
-    echo "AI_PROVIDER=GEMINI" > .env
-    echo "GEMINI_API_KEY=AIzaSyCszqkHC_fZnFkwdhm0oLoRPNgyEQIyaPI" >> .env
+    echo "⚠️  Root .env missing. Creating from .env.example..."
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+    else
+        echo "❌ Error: .env.example not found!"
+        exit 1
+    fi
+fi
+
+# Check for placeholder or empty key
+CURRENT_KEY=$(grep GEMINI_API_KEY .env | cut -d '=' -f 2)
+if [ -z "$CURRENT_KEY" ] || [ "$CURRENT_KEY" = "your_gemini_key_here" ]; then
+    echo "⚠️  GEMINI_API_KEY is missing or set to placeholder."
+    read -p "🔑 Please enter your Gemini API Key (or press Enter to exit): " USER_KEY
+
+    if [ -z "$USER_KEY" ]; then
+        echo "❌ Error: API Key is required to start the application."
+        exit 1
+    fi
+
+    # Update .env with user key
+    sed -i "s|GEMINI_API_KEY=.*|GEMINI_API_KEY=$USER_KEY|" .env
+    echo "✅ API Key saved to .env"
 fi
 
 # Ensure package envs exist
