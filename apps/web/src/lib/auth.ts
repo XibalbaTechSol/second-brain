@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    CredentialsProvider({
+    ...((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? [CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
 
         return user;
       }
-    })
+    })] : [])
   ],
   session: {
     strategy: "jwt"
