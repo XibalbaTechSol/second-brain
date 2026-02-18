@@ -23,6 +23,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { content, source } = await request.json();
     
     if (!content) {
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
       data: {
         content,
         source: source || 'api',
-        userId: user?.id || null
+        userId: user.id
       },
     });
 
