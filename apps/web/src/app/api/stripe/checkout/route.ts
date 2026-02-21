@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
@@ -6,20 +6,23 @@ import { prisma } from "@second-brain/database";
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions) as any;
+    const session = (await getServerSession(authOptions)) as any;
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { priceId, tier } = await request.json();
 
     if (!priceId) {
-      return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Price ID is required" },
+        { status: 400 },
+      );
     }
 
     // 1. Get or Create Stripe Customer
     const userSubscription = await prisma.subscription.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: session.user.id },
     });
 
     let stripeCustomerId = userSubscription?.stripeCustomerId;
@@ -29,19 +32,19 @@ export async function POST(request: Request) {
         email: session.user.email,
         name: session.user.name,
         metadata: {
-          userId: session.user.id
-        }
+          userId: session.user.id,
+        },
       });
       stripeCustomerId = customer.id;
 
       await prisma.subscription.upsert({
         where: { userId: session.user.id },
         update: { stripeCustomerId },
-        create: { 
+        create: {
           userId: session.user.id,
           stripeCustomerId,
-          tier: 'FREE'
-        }
+          tier: "FREE",
+        },
       });
     }
 
@@ -54,18 +57,18 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: "subscription",
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/settings`,
       metadata: {
         userId: session.user.id,
-        tier
-      }
+        tier,
+      },
     });
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error: any) {
-    console.error('Stripe Checkout Error:', error);
+    console.error("Stripe Checkout Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

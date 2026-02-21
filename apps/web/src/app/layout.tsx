@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import FloatingInbox from "@/components/FloatingInbox";
-import { usePathname } from 'next/navigation';
+import { usePathname } from "next/navigation";
 import { Providers } from "./providers";
 
 const inter = Inter({
@@ -18,7 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isPublicPage = pathname === '/' || pathname === '/login' || pathname === '/about';
+  const isPublicPage =
+    pathname === "/" || pathname === "/login" || pathname === "/about";
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -28,7 +29,9 @@ export default function RootLayout({
         <Providers>
           <div className="flex h-screen overflow-hidden">
             {!isPublicPage && <Sidebar />}
-            <main className={`flex-1 overflow-y-auto relative ${isPublicPage ? 'w-full' : ''}`}>
+            <main
+              className={`flex-1 overflow-y-auto relative ${isPublicPage ? "w-full" : ""}`}
+            >
               {children}
               {!isPublicPage && <FloatingInbox />}
             </main>

@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@second-brain/database';
+import { NextResponse } from "next/server";
+import { prisma } from "@second-brain/database";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q') || '';
+  const query = searchParams.get("q") || "";
 
   try {
     const entities = await prisma.entity.findMany({
@@ -22,6 +22,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(entities);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch suggestions" },
+      { status: 500 },
+    );
   }
 }

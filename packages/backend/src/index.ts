@@ -1,44 +1,50 @@
-import { prisma } from '@second-brain/database';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Ollama } from 'ollama';
-import * as dotenv from 'dotenv';
+import { prisma } from "@second-brain/database";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Ollama } from "ollama";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
-console.log('🧠 CognitoFlow Intelligence Engine Starting...');
-console.log(`🤖 AI Mode: ${process.env.AI_PROVIDER || 'MOCK'} (Options: GEMINI, OLLAMA, MOCK)`);
+console.log("🧠 CognitoFlow Intelligence Engine Starting...");
+console.log(
+  `🤖 AI Mode: ${process.env.AI_PROVIDER || "MOCK"} (Options: GEMINI, OLLAMA, MOCK)`,
+);
 
 // --- AI SETUP ---
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const ollama = new Ollama({ host: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434' });
+const genAI = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
+const ollama = new Ollama({
+  host: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
+});
 
 // --- EMBEDDING ENGINE ---
 async function generateEmbedding(text: string): Promise<string | null> {
   const provider = process.env.AI_PROVIDER;
 
   try {
-    if (provider === 'GEMINI' && genAI) {
+    if (provider === "GEMINI" && genAI) {
       const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
       const result = await model.embedContent(text);
       return JSON.stringify(result.embedding.values);
-    }
-    else if (provider === 'OLLAMA') {
+    } else if (provider === "OLLAMA") {
       const response = await ollama.embeddings({
-        model: process.env.OLLAMA_MODEL || 'llama3',
+        model: process.env.OLLAMA_MODEL || "llama3",
         prompt: text,
       });
       return JSON.stringify(response.embedding);
-    }
-    else {
-      throw new Error(`No valid AI provider configured for embeddings (Provider: ${provider})`);
+    } else {
+      throw new Error(
+        `No valid AI provider configured for embeddings (Provider: ${provider})`,
+      );
     }
   } catch (error) {
-    console.error('Embedding generation failed:', error);
+    console.error("Embedding generation failed:", error);
     return null;
   }
 }
 
-async function classifyContent(content: string, itemId: string = 'unknown') {
+async function classifyContent(content: string, itemId: string = "unknown") {
   const provider = process.env.AI_PROVIDER;
 
   const systemPrompt = `
@@ -86,25 +92,32 @@ async function classifyContent(content: string, itemId: string = 'unknown') {
   `;
 
   try {
-    if (provider === 'GEMINI' && genAI) {
+    if (provider === "GEMINI" && genAI) {
       console.log(`📡 Calling Gemini API (${itemId.slice(0, 8)})...`);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(systemPrompt + "\nInput: " + content);
+      const result = await model.generateContent(
+        systemPrompt + "\nInput: " + content,
+      );
       console.log(`✅ Gemini Response received.`);
       const text = result.response.text();
-      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const jsonStr = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
       return JSON.parse(jsonStr);
-
-    } else if (provider === 'OLLAMA') {
+    } else if (provider === "OLLAMA") {
       const response = await ollama.chat({
-        model: process.env.OLLAMA_MODEL || 'llama3',
-        messages: [{ role: 'user', content: systemPrompt + "\nInput: " + content }],
-        format: 'json',
+        model: process.env.OLLAMA_MODEL || "llama3",
+        messages: [
+          { role: "user", content: systemPrompt + "\nInput: " + content },
+        ],
+        format: "json",
       });
       return JSON.parse(response.message.content);
-
     } else {
-      throw new Error(`No valid AI provider configured for classification (Provider: ${provider})`);
+      throw new Error(
+        `No valid AI provider configured for classification (Provider: ${provider})`,
+      );
     }
   } catch (error) {
     console.error(`AI Classification failed (${provider}):`, error);
@@ -113,15 +126,22 @@ async function classifyContent(content: string, itemId: string = 'unknown') {
 }
 
 // --- AUTOMATION ENGINE ---
-async function runWorkflows(entityId: string, entityType: string, content: string, userId: string | null) {
-  console.log(`⚙️ Checking workflows for Entity:${entityId} (${entityType}) for User:${userId}...`);
+async function runWorkflows(
+  entityId: string,
+  entityType: string,
+  content: string,
+  userId: string | null,
+) {
+  console.log(
+    `⚙️ Checking workflows for Entity:${entityId} (${entityType}) for User:${userId}...`,
+  );
 
   const workflows = await prisma.workflow.findMany({
-    where: { 
+    where: {
       isActive: true,
-      trigger: 'ON_CLASSIFY',
-      userId: userId // Only run user's own workflows
-    }
+      trigger: "ON_CLASSIFY",
+      userId: userId, // Only run user's own workflows
+    },
   });
 
   console.log(`🔍 Found ${workflows.length} active classification workflows.`);
@@ -135,14 +155,22 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
         console.log(`   -> Conditions: ${flow.conditions}`);
 
         if (conditions.contains_keyword) {
-          if (!content.toLowerCase().includes(conditions.contains_keyword.toLowerCase())) {
-            console.log(`   -> Condition failed: keyword "${conditions.contains_keyword}" not found.`);
+          if (
+            !content
+              .toLowerCase()
+              .includes(conditions.contains_keyword.toLowerCase())
+          ) {
+            console.log(
+              `   -> Condition failed: keyword "${conditions.contains_keyword}" not found.`,
+            );
             conditionMet = false;
           }
         }
 
         if (conditions.type_is && conditions.type_is !== entityType) {
-          console.log(`   -> Condition failed: type mismatch. Expected ${conditions.type_is}, got ${entityType}.`);
+          console.log(
+            `   -> Condition failed: type mismatch. Expected ${conditions.type_is}, got ${entityType}.`,
+          );
           conditionMet = false;
         }
       }
@@ -155,60 +183,82 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
           originalContent: content,
           reasoningInsights: "",
           entityType: entityType,
-          entityId: entityId
+          entityId: entityId,
         };
 
         for (const action of actions) {
+          if (action.type.startsWith("create_")) {
+            const targetType = action.type.replace("create_", "").toUpperCase();
 
-          if (action.type.startsWith('create_')) {
-            const targetType = action.type.replace('create_', '').toUpperCase();
-            
             await prisma.entity.create({
               data: {
                 title: `[AUTO] ${action.params.title}`,
                 type: targetType,
-                content: workflowContext.reasoningInsights || `Generated by workflow "${flow.name}" from source entity ${entityId}`,
-                status: 'Active',
+                content:
+                  workflowContext.reasoningInsights ||
+                  `Generated by workflow "${flow.name}" from source entity ${entityId}`,
+                status: "Active",
                 confidence: 1.0,
                 userId: userId,
-                project: targetType === 'PROJECT' ? { create: { status: 'Active' } } : undefined,
-                person: targetType === 'PERSON' ? { create: { role: 'Unknown' } } : undefined,
-                idea: targetType === 'IDEA' ? { create: { potential: 'Medium' } } : undefined,
-                admin: targetType === 'ADMIN' ? { create: { importance: 'Medium' } } : undefined,
-                goal: targetType === 'GOAL' ? { create: { status: 'Active' } } : undefined,
+                project:
+                  targetType === "PROJECT"
+                    ? { create: { status: "Active" } }
+                    : undefined,
+                person:
+                  targetType === "PERSON"
+                    ? { create: { role: "Unknown" } }
+                    : undefined,
+                idea:
+                  targetType === "IDEA"
+                    ? { create: { potential: "Medium" } }
+                    : undefined,
+                admin:
+                  targetType === "ADMIN"
+                    ? { create: { importance: "Medium" } }
+                    : undefined,
+                goal:
+                  targetType === "GOAL"
+                    ? { create: { status: "Active" } }
+                    : undefined,
                 linksTo: {
                   create: {
-                    type: 'GENERATED_BY',
-                    source: { connect: { id: entityId } }
-                  }
-                }
-              }
+                    type: "GENERATED_BY",
+                    source: { connect: { id: entityId } },
+                  },
+                },
+              },
             });
-            console.log(`   -> Action: Created ${targetType} "${action.params.title}"`);
-          }
-
-          else if (action.type === 'notify') {
-            let message = action.params.message || action.params.template || "Workflow notification";
+            console.log(
+              `   -> Action: Created ${targetType} "${action.params.title}"`,
+            );
+          } else if (action.type === "notify") {
+            let message =
+              action.params.message ||
+              action.params.template ||
+              "Workflow notification";
             if (workflowContext.reasoningInsights) {
-              message = message.replace('{{reasoning}}', workflowContext.reasoningInsights);
+              message = message.replace(
+                "{{reasoning}}",
+                workflowContext.reasoningInsights,
+              );
             }
-            
+
             await prisma.inboxItem.create({
               data: {
                 content: `WORKFLOW NUDGE: ${message}`,
-                source: 'AI_RECEIPT',
-                status: 'COMPLETED',
+                source: "AI_RECEIPT",
+                status: "COMPLETED",
                 confidence: 1.0,
-                userId: userId
-              }
+                userId: userId,
+              },
             });
             console.log(`   -> Action: Created System Nudge "${message}"`);
-          }
-
-          else if (action.type === 'ai_reasoning') {
+          } else if (action.type === "ai_reasoning") {
             console.log(`   -> Action: Performing Gemini Reasoning...`);
-            const prompt = action.params.prompt || "Analyze this input and provide strategic insights.";
-            
+            const prompt =
+              action.params.prompt ||
+              "Analyze this input and provide strategic insights.";
+
             const systemPrompt = `
               You are the "CognitoFlow Reasoning Engine".
               Context: ${workflowContext.entityType}
@@ -219,31 +269,35 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
               Provide a concise analysis (under 50 words).
             `;
 
-            const model = genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = genAI!.getGenerativeModel({
+              model: "gemini-2.0-flash",
+            });
             const result = await model.generateContent(systemPrompt);
             workflowContext.reasoningInsights = result.response.text().trim();
 
             await prisma.inboxItem.create({
               data: {
                 content: `🧠 AI REASONING: ${workflowContext.reasoningInsights}`,
-                source: 'AI_COACH',
-                status: 'COMPLETED',
+                source: "AI_COACH",
+                status: "COMPLETED",
                 confidence: 1.0,
                 processedEntityId: entityId,
-                userId: userId
-              }
+                userId: userId,
+              },
             });
-            console.log(`   -> Action: Gemini reasoned: ${workflowContext.reasoningInsights}`);
-          }
-
-          else if (action.type === 'ai_nudge') {
+            console.log(
+              `   -> Action: Gemini reasoned: ${workflowContext.reasoningInsights}`,
+            );
+          } else if (action.type === "ai_nudge") {
             console.log(`   -> Action: Generating Intelligent AI Nudge...`);
-            const template = action.params.template || "generate a 1-sentence strategic, high-value nudge or 'next thought' for the user. Be provocative but helpful. Keep it under 25 words.";
-            
+            const template =
+              action.params.template ||
+              "generate a 1-sentence strategic, high-value nudge or 'next thought' for the user. Be provocative but helpful. Keep it under 25 words.";
+
             const systemPrompt = `
               You are the "CognitoFlow Strategy Coach".
               Context: The user just added a new ${workflowContext.entityType} to their Second Brain.
-              ${workflowContext.reasoningInsights ? `Previous Reasoning: ${workflowContext.reasoningInsights}` : ''}
+              ${workflowContext.reasoningInsights ? `Previous Reasoning: ${workflowContext.reasoningInsights}` : ""}
               
               Task: ${template}
               
@@ -252,27 +306,29 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
               Return ONLY the nudge text.
             `;
 
-            const model = genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = genAI!.getGenerativeModel({
+              model: "gemini-2.0-flash",
+            });
             const result = await model.generateContent(systemPrompt);
             const nudgeText = result.response.text().trim();
 
             await prisma.inboxItem.create({
               data: {
                 content: `🧠 AI STRATEGY: ${nudgeText}`,
-                source: 'AI_COACH',
-                status: 'COMPLETED',
+                source: "AI_COACH",
+                status: "COMPLETED",
                 confidence: 1.0,
                 processedEntityId: entityId,
-                userId: userId
-              }
+                userId: userId,
+              },
             });
 
             await prisma.auditLog.create({
               data: {
-                action: 'AI_NUDGE_GENERATED',
+                action: "AI_NUDGE_GENERATED",
                 details: `Nudge: "${nudgeText.slice(0, 50)}..." for ${entityType}`,
-                entityId: entityId
-              }
+                entityId: entityId,
+              },
             });
             console.log(`   -> Action: AI Nudge generated: ${nudgeText}`);
           }
@@ -280,11 +336,11 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
 
         await prisma.auditLog.create({
           data: {
-            action: 'WORKFLOW_EXECUTED',
+            action: "WORKFLOW_EXECUTED",
             details: `Workflow "${flow.name}" executed for ${entityType}`,
             workflowId: flow.id,
-            entityId: entityId
-          }
+            entityId: entityId,
+          },
         });
       }
     } catch (err) {
@@ -297,22 +353,22 @@ async function runWorkflows(entityId: string, entityType: string, content: strin
 async function runNudgeEngine() {
   const activeProjects = await prisma.entity.findMany({
     where: {
-      type: 'PROJECT',
-      status: 'Active'
+      type: "PROJECT",
+      status: "Active",
     },
     include: {
-      project: true
-    }
+      project: true,
+    },
   });
 
   for (const proj of activeProjects) {
     // Only nudge if not nudged in the last 24h
     const existingNudge = await prisma.inboxItem.findFirst({
       where: {
-        source: 'AI_COACH',
+        source: "AI_COACH",
         content: { contains: proj.title },
-        createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-      }
+        createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      },
     });
 
     if (existingNudge) continue;
@@ -344,56 +400,58 @@ async function runNudgeEngine() {
         await prisma.inboxItem.create({
           data: {
             content: `🧠 AI COACH: ${nudgeText} (re: ${proj.title})`,
-            source: 'AI_COACH',
-            status: 'PENDING',
+            source: "AI_COACH",
+            status: "PENDING",
             confidence: 1.0,
-            userId: proj.userId
-          }
+            userId: proj.userId,
+          },
         });
       }
     } catch (err) {
-      console.error('Nudge generation failed', err);
+      console.error("Nudge generation failed", err);
     }
   }
 }
 
 // --- CALENDAR EVENT ENGINE ---
 async function runCalendarEvents() {
-  console.log('📅 Checking for due calendar events...');
-  
+  console.log("📅 Checking for due calendar events...");
+
   const events = await prisma.calendarEvent.findMany({
-    where: { 
-      status: 'PENDING',
-      scheduledAt: { lte: new Date() }
-    }
+    where: {
+      status: "PENDING",
+      scheduledAt: { lte: new Date() },
+    },
   });
 
   for (const event of events) {
     try {
-      console.log(`⚡ Triggering Calendar Event: "${event.title}" for user ${event.userId}`);
-      
+      console.log(
+        `⚡ Triggering Calendar Event: "${event.title}" for user ${event.userId}`,
+      );
+
       // Create the nudge/notification from the event
       await prisma.inboxItem.create({
         data: {
-          content: `${event.type}: ${event.title}${event.description ? ` - ${event.description}` : ''}`,
-          source: 'AI_CALENDAR',
-          status: 'PENDING',
+          content: `${event.type}: ${event.title}${event.description ? ` - ${event.description}` : ""}`,
+          source: "AI_CALENDAR",
+          status: "PENDING",
           confidence: 1.0,
-          userId: event.userId
-        }
+          userId: event.userId,
+        },
       });
 
       await prisma.calendarEvent.update({
         where: { id: event.id },
-        data: { status: 'COMPLETED' }
+        data: { status: "COMPLETED" },
       });
 
       await prisma.auditLog.create({
         data: {
-          action: 'CALENDAR_EVENT_TRIGGERED',
+          action: "CALENDAR_EVENT_TRIGGERED",
           details: `Event "${event.title}" (${event.type}) executed.`,
-          entityId: event.id
-        }
+          entityId: event.id,
+        },
       });
     } catch (err) {
       console.error(`Error running calendar event ${event.id}:`, err);
@@ -403,86 +461,96 @@ async function runCalendarEvents() {
 
 // --- SCHEDULED WORKFLOW ENGINE ---
 async function runScheduledWorkflows() {
-  console.log('⏰ Checking for scheduled workflows...');
-  
+  console.log("⏰ Checking for scheduled workflows...");
+
   const workflows = await prisma.workflow.findMany({
-    where: { 
+    where: {
       isActive: true,
-      trigger: 'SCHEDULE'
-    }
+      trigger: "SCHEDULE",
+    },
   });
 
   const now = new Date();
 
   for (const flow of workflows) {
     try {
-      const conditions = JSON.parse(flow.conditions || '{}');
-      const interval = conditions.interval || 'day';
+      const conditions = JSON.parse(flow.conditions || "{}");
+      const interval = conditions.interval || "day";
       const lastRun = flow.lastRunAt ? new Date(flow.lastRunAt) : new Date(0);
-      
+
       let shouldRun = false;
       const diffMs = now.getTime() - lastRun.getTime();
 
-      if (interval === 'minute' && diffMs >= 60 * 1000) shouldRun = true;
-      else if (interval === 'hour' && diffMs >= 60 * 60 * 1000) shouldRun = true;
-      else if (interval === 'day' && diffMs >= 24 * 60 * 60 * 1000) shouldRun = true;
-      else if (interval === 'week' && diffMs >= 7 * 24 * 60 * 60 * 1000) shouldRun = true;
+      if (interval === "minute" && diffMs >= 60 * 1000) shouldRun = true;
+      else if (interval === "hour" && diffMs >= 60 * 60 * 1000)
+        shouldRun = true;
+      else if (interval === "day" && diffMs >= 24 * 60 * 60 * 1000)
+        shouldRun = true;
+      else if (interval === "week" && diffMs >= 7 * 24 * 60 * 60 * 1000)
+        shouldRun = true;
 
       if (shouldRun) {
-        console.log(`⚡ Executing Scheduled Workflow: "${flow.name}" for user ${flow.userId}`);
-        
+        console.log(
+          `⚡ Executing Scheduled Workflow: "${flow.name}" for user ${flow.userId}`,
+        );
+
         const actions = JSON.parse(flow.actions as string);
         let workflowContext = {
           originalContent: "Scheduled Execution",
           reasoningInsights: "",
           entityType: "SCHEDULE",
-          entityId: "scheduled"
+          entityId: "scheduled",
         };
 
         for (const action of actions) {
           // Re-use logic from runWorkflows or refactor to common function
-          if (action.type === 'notify') {
-            let message = action.params.message || action.params.template || "Scheduled notification";
+          if (action.type === "notify") {
+            let message =
+              action.params.message ||
+              action.params.template ||
+              "Scheduled notification";
             await prisma.inboxItem.create({
               data: {
                 content: `📅 SCHEDULED: ${message}`,
-                source: 'AI_RECEIPT',
-                status: 'COMPLETED',
+                source: "AI_RECEIPT",
+                status: "COMPLETED",
                 confidence: 1.0,
-                userId: flow.userId
-              }
+                userId: flow.userId,
+              },
             });
-          } else if (action.type === 'ai_nudge') {
-             // For scheduled nudges, we might want to pick a random active project or just send a general tip
-             const systemPrompt = `You are the "CognitoFlow Performance Coach". Provide a daily high-performance tip for the user. Keep it under 20 words.`;
-             const model = genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
-             const result = await model.generateContent(systemPrompt);
-             const nudgeText = result.response.text().trim();
+          } else if (action.type === "ai_nudge") {
+            // For scheduled nudges, we might want to pick a random active project or just send a general tip
+            const systemPrompt = `You are the "CognitoFlow Performance Coach". Provide a daily high-performance tip for the user. Keep it under 20 words.`;
+            const model = genAI!.getGenerativeModel({
+              model: "gemini-2.0-flash",
+            });
+            const result = await model.generateContent(systemPrompt);
+            const nudgeText = result.response.text().trim();
 
-             await prisma.inboxItem.create({
-               data: {
-                 content: `🧠 COACH TIP: ${nudgeText}`,
-                 source: 'AI_COACH',
-                 status: 'COMPLETED',
-                 confidence: 1.0,
-                 userId: flow.userId
-               }
-             });
+            await prisma.inboxItem.create({
+              data: {
+                content: `🧠 COACH TIP: ${nudgeText}`,
+                source: "AI_COACH",
+                status: "COMPLETED",
+                confidence: 1.0,
+                userId: flow.userId,
+              },
+            });
           }
           // ... handle other action types if needed
         }
 
         await prisma.workflow.update({
           where: { id: flow.id },
-          data: { lastRunAt: now }
+          data: { lastRunAt: now },
         });
 
         await prisma.auditLog.create({
           data: {
-            action: 'WORKFLOW_EXECUTED',
+            action: "WORKFLOW_EXECUTED",
             details: `Scheduled workflow "${flow.name}" executed successfully.`,
-            workflowId: flow.id
-          }
+            workflowId: flow.id,
+          },
         });
       }
     } catch (err) {
@@ -493,8 +561,8 @@ async function runScheduledWorkflows() {
 
 async function processInbox() {
   const pendingItems = await prisma.inboxItem.findMany({
-    where: { status: 'PENDING' },
-    take: 5
+    where: { status: "PENDING" },
+    take: 5,
   });
 
   if (pendingItems.length > 0) {
@@ -502,49 +570,56 @@ async function processInbox() {
   }
 
   for (const item of pendingItems) {
-    await prisma.inboxItem.update({ where: { id: item.id }, data: { status: 'PROCESSING' } });
+    await prisma.inboxItem.update({
+      where: { id: item.id },
+      data: { status: "PROCESSING" },
+    });
 
     await prisma.auditLog.create({
       data: {
-        action: 'INBOX_CAPTURE',
+        action: "INBOX_CAPTURE",
         details: `Processing raw input: "${item.content.slice(0, 30)}"...`,
-        confidence: 1.0
-      }
+        confidence: 1.0,
+      },
     });
 
     try {
       const result = await classifyContent(item.content, item.id);
-      console.log(`Classified "${item.content.slice(0, 20)}"..." -> ${result.type} (Confidence: ${result.confidence})`);
+      console.log(
+        `Classified "${item.content.slice(0, 20)}"..." -> ${result.type} (Confidence: ${result.confidence})`,
+      );
 
       // CHAT LOG: Reasoning
       await prisma.inboxItem.create({
         data: {
           content: `🧠 AI REASONING: ${result.reasoning}`,
-          source: 'AI_REASONING',
-          status: 'COMPLETED',
+          source: "AI_REASONING",
+          status: "COMPLETED",
           confidence: result.confidence,
-          userId: item.userId
-        }
+          userId: item.userId,
+        },
       });
 
-      if (result.type === 'CLARIFY') {
-        console.log(`💬 AI needs clarification (P=${result.confidence}): ${result.clarificationQuestion}`);
+      if (result.type === "CLARIFY") {
+        console.log(
+          `💬 AI needs clarification (P=${result.confidence}): ${result.clarificationQuestion}`,
+        );
         await prisma.inboxItem.update({
           where: { id: item.id },
           data: {
-            status: 'NEEDS_USER_REVIEW',
+            status: "NEEDS_USER_REVIEW",
             confidence: result.confidence,
-            processingError: result.clarificationQuestion
-          }
+            processingError: result.clarificationQuestion,
+          },
         });
 
         await prisma.inboxItem.create({
           data: {
             content: `❓ CLARIFICATION NEEDED: ${result.clarificationQuestion}`,
-            source: 'AI_RECEIPT',
-            status: 'COMPLETED',
-            confidence: 1.0
-          }
+            source: "AI_RECEIPT",
+            status: "COMPLETED",
+            confidence: 1.0,
+          },
         });
         continue;
       }
@@ -553,22 +628,24 @@ async function processInbox() {
       await prisma.inboxItem.create({
         data: {
           content: `📍 ROUTING STRATEGY: ${result.routingStrategy}`,
-          source: 'AI_ROUTING',
-          status: 'COMPLETED',
+          source: "AI_ROUTING",
+          status: "COMPLETED",
           confidence: result.confidence,
-          userId: item.userId
-        }
+          userId: item.userId,
+        },
       });
 
       if (result.confidence < 0.8) {
-        console.log(`🚫 Confidence too low (${result.confidence}). Sent for manual review.`);
+        console.log(
+          `🚫 Confidence too low (${result.confidence}). Sent for manual review.`,
+        );
         await prisma.inboxItem.update({
           where: { id: item.id },
           data: {
-            status: 'NEEDS_USER_REVIEW',
+            status: "NEEDS_USER_REVIEW",
             confidence: result.confidence,
-            processingError: `Low confidence (${result.confidence}). Suggested: ${result.type}`
-          }
+            processingError: `Low confidence (${result.confidence}). Suggested: ${result.type}`,
+          },
         });
         continue;
       }
@@ -582,109 +659,124 @@ async function processInbox() {
           type: result.type,
           intent: result.intent,
           summary: result.summary,
-          status: result.status || 'Active',
+          status: result.status || "Active",
           confidence: result.confidence,
           embedding: embeddingJSON,
           userId: item.userId, // Preserve multi-tenancy
-          project: result.type === 'PROJECT' ? {
-            create: { 
-              status: result.status || 'Active',
-              deadline: result.projectData?.deadline ? new Date(result.projectData.deadline) : undefined,
-              priority: result.projectData?.priority,
-              outcome: result.projectData?.outcome,
-              nextAction: result.projectData?.nextAction,
-              budget: result.projectData?.budget,
-              riskLevel: result.projectData?.riskLevel
-            }
-          } : undefined,
-          person: result.type === 'PERSON' ? {
-            create: { 
-              role: result.personData?.role || 'Unknown', 
-              company: result.personData?.company,
-              email: result.personData?.email,
-              phone: result.personData?.phone,
-              linkedin: result.personData?.linkedin
-            }
-          } : undefined,
-          idea: result.type === 'IDEA' ? {
-            create: {
-              potential: result.ideaData?.potential,
-              area: result.ideaData?.area,
-              impactScore: result.ideaData?.impactScore,
-              effortScore: result.ideaData?.effortScore,
-              feasibility: result.ideaData?.feasibility
-            }
-          } : undefined,
-          admin: result.type === 'ADMIN' ? {
-            create: {
-              category: result.adminData?.category,
-              importance: result.adminData?.importance,
-              expiryDate: result.adminData?.expiryDate ? new Date(result.adminData.expiryDate) : undefined,
-              confidentiality: result.adminData?.confidentiality
-            }
-          } : undefined
-        }
+          project:
+            result.type === "PROJECT"
+              ? {
+                  create: {
+                    status: result.status || "Active",
+                    deadline: result.projectData?.deadline
+                      ? new Date(result.projectData.deadline)
+                      : undefined,
+                    priority: result.projectData?.priority,
+                    outcome: result.projectData?.outcome,
+                    nextAction: result.projectData?.nextAction,
+                    budget: result.projectData?.budget,
+                    riskLevel: result.projectData?.riskLevel,
+                  },
+                }
+              : undefined,
+          person:
+            result.type === "PERSON"
+              ? {
+                  create: {
+                    role: result.personData?.role || "Unknown",
+                    company: result.personData?.company,
+                    email: result.personData?.email,
+                    phone: result.personData?.phone,
+                    linkedin: result.personData?.linkedin,
+                  },
+                }
+              : undefined,
+          idea:
+            result.type === "IDEA"
+              ? {
+                  create: {
+                    potential: result.ideaData?.potential,
+                    area: result.ideaData?.area,
+                    impactScore: result.ideaData?.impactScore,
+                    effortScore: result.ideaData?.effortScore,
+                    feasibility: result.ideaData?.feasibility,
+                  },
+                }
+              : undefined,
+          admin:
+            result.type === "ADMIN"
+              ? {
+                  create: {
+                    category: result.adminData?.category,
+                    importance: result.adminData?.importance,
+                    expiryDate: result.adminData?.expiryDate
+                      ? new Date(result.adminData.expiryDate)
+                      : undefined,
+                    confidentiality: result.adminData?.confidentiality,
+                  },
+                }
+              : undefined,
+        },
       });
 
       await prisma.auditLog.create({
         data: {
-          action: 'AI_CLASSIFIED',
+          action: "AI_CLASSIFIED",
           details: `Classified as ${result.type} (P=${result.confidence?.toFixed(2)})`,
           confidence: result.confidence,
-          entityId: entity.id
-        }
+          entityId: entity.id,
+        },
       });
 
       await prisma.inboxItem.update({
         where: { id: item.id },
         data: {
-          status: 'COMPLETED',
+          status: "COMPLETED",
           processedEntityId: entity.id,
-          confidence: result.confidence
-        }
+          confidence: result.confidence,
+        },
       });
 
       await prisma.inboxItem.create({
         data: {
           content: `✅ PROCESSED: Created ${result.type} "${result.title}" (P=${result.confidence?.toFixed(2)})`,
-          source: 'AI_RECEIPT',
-          status: 'COMPLETED',
+          source: "AI_RECEIPT",
+          status: "COMPLETED",
           confidence: 1.0,
           processedEntityId: entity.id,
-          userId: item.userId
-        }
+          userId: item.userId,
+        },
       });
 
       await runWorkflows(entity.id, result.type, item.content, entity.userId);
-
     } catch (err) {
       console.error(`Error processing item ${item.id}:`, err);
       await prisma.inboxItem.update({
         where: { id: item.id },
-        data: { status: 'FAILED', processingError: String(err) }
+        data: { status: "FAILED", processingError: String(err) },
       });
     }
   }
 }
 
 async function main() {
-  console.log('🚀 Backend Main Loop Started');
+  console.log("🚀 Backend Main Loop Started");
 
   let tick = 0;
   while (true) {
     try {
       await processInbox();
       if (tick % 10 === 0) {
-        console.log('⏰ Running Nudge Engine...');
+        console.log("⏰ Running Nudge Engine...");
         await runNudgeEngine();
         await runScheduledWorkflows();
         await runCalendarEvents();
       }
     } catch (loopError) {
-      console.error('❌ Error in Main Loop:', loopError);
+      console.error("❌ Error in Main Loop:", loopError);
     }
     tick++;
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 }
 

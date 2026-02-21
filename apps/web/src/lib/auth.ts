@@ -4,56 +4,64 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@second-brain/database";
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: "openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events"
-        }
-      }
-    }),
+const providers: NextAuthOptions["providers"] = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    authorization: {
+      params: {
+        scope:
+          "openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events",
+      },
+    },
+  }),
+];
+
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+  providers.push(
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email) return null;
 
         // "Ignore security" - auto create or just find
         let user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
         });
 
         if (!user) {
           user = await prisma.user.create({
             data: {
               email: credentials.email,
-              name: credentials.email.split('@')[0],
+              name: credentials.email.split("@")[0],
               trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
               subscription: {
                 create: {
-                  tier: 'FREE'
-                }
-              }
-            }
+                  tier: "FREE",
+                },
+              },
+            },
           });
         }
 
         return user;
-      }
-    })
-  ],
+      },
+    }),
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers,
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
   },
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
   callbacks: {
     async session({ session, token }) {
@@ -61,6 +69,6 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.sub;
       }
       return session;
-    }
-  }
+    },
+  },
 };

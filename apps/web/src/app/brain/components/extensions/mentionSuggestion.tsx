@@ -1,10 +1,12 @@
-import { ReactRenderer } from '@tiptap/react';
-import tippy from 'tippy.js';
-import { MentionList } from './MentionList';
+import { ReactRenderer } from "@tiptap/react";
+import tippy from "tippy.js";
+import { MentionList } from "./MentionList";
 
 export default {
   items: async ({ query }: { query: string }) => {
-    const response = await fetch(`/api/entities/suggest?q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `/api/entities/suggest?q=${encodeURIComponent(query)}`,
+    );
     if (!response.ok) return [];
     return await response.json();
   },
@@ -24,14 +26,14 @@ export default {
           return;
         }
 
-        popup = tippy('body', {
+        popup = tippy("body", {
           getReferenceClientRect: props.clientRect,
           appendTo: () => document.body,
           content: component.element,
           showOnCreate: true,
           interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
+          trigger: "manual",
+          placement: "bottom-start",
         });
       },
 
@@ -48,7 +50,7 @@ export default {
       },
 
       onKeyDown(props: any) {
-        if (props.event.key === 'Escape') {
+        if (props.event.key === "Escape") {
           popup[0].hide();
           return true;
         }
