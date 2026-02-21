@@ -1,16 +1,18 @@
-import { createClient } from './supabase/server'
-import { redirect } from 'next/navigation'
+import { createClient } from "./supabase/server";
+import { redirect } from "next/navigation";
 
 export async function getUser() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
 }
 
 export async function requireUser() {
-  const user = await getUser()
+  const user = await getUser();
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
-  return user
+  return user;
 }

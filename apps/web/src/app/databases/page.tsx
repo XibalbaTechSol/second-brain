@@ -1,37 +1,37 @@
-import { DatabaseView } from '@/components/database/DatabaseView';
-import { prisma } from '@second-brain/database';
-import { formatToMMDDYYYY } from '@/lib/date-utils';
+import { DatabaseView } from "@/components/database/DatabaseView";
+import { prisma } from "@second-brain/database";
+import { formatToMMDDYYYY } from "@/lib/date-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function DatabasesPage() {
   const entities = await prisma.entity.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     include: {
       tags: true,
       project: true,
       person: true,
       idea: true,
-      admin: true
-    }
+      admin: true,
+    },
   });
 
-  const data = entities.map(e => ({
+  const data = entities.map((e) => ({
     id: e.id,
     name: e.title,
-    tags: [e.type, ...(e.tags?.map(t => t.name) || [])],
-    status: e.status || 'Active',
+    tags: [e.type, ...(e.tags?.map((t) => t.name) || [])],
+    status: e.status || "Active",
     role: e.person?.role,
     company: e.person?.company,
     outcome: e.project?.outcome,
     created: formatToMMDDYYYY(e.createdAt),
     type: e.type,
     metadata: {
-        person: e.person,
-        project: e.project,
-        idea: e.idea,
-        admin: e.admin
-    }
+      person: e.person,
+      project: e.project,
+      idea: e.idea,
+      admin: e.admin,
+    },
   }));
 
   return (

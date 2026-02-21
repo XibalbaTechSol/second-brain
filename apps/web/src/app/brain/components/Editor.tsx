@@ -1,30 +1,43 @@
-'use client';
+"use client";
 
-import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Placeholder from '@tiptap/extension-placeholder';
-import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import { common, createLowlight } from 'lowlight';
-import Image from '@tiptap/extension-image';
-import Mention from '@tiptap/extension-mention';
-import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Heading1, Heading2, List, CheckSquare, Type, ChevronDown, Quote } from 'lucide-react';
-import { Extension } from '@tiptap/core';
-import Suggestion from '@tiptap/suggestion';
-import suggestion from './extensions/suggestion';
-import mentionSuggestion from './extensions/mentionSuggestion';
+import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
+import Image from "@tiptap/extension-image";
+import Mention from "@tiptap/extension-mention";
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  Link as LinkIcon,
+  Heading1,
+  Heading2,
+  List,
+  CheckSquare,
+  Type,
+  ChevronDown,
+  Quote,
+} from "lucide-react";
+import { Extension } from "@tiptap/core";
+import Suggestion from "@tiptap/suggestion";
+import suggestion from "./extensions/suggestion";
+import mentionSuggestion from "./extensions/mentionSuggestion";
 
 const lowlight = createLowlight(common);
 
 const Commands = Extension.create({
-  name: 'slash-commands',
+  name: "slash-commands",
   addOptions() {
     return {
       suggestion: {
-        char: '/',
+        char: "/",
         command: ({ editor, range, props }: any) => {
           props.command({ editor, range });
         },
@@ -41,14 +54,20 @@ const Commands = Extension.create({
   },
 });
 
-export default function Editor({ content, onChange }: { content: string, onChange: (val: string) => void }) {
+export default function Editor({
+  content,
+  onChange,
+}: {
+  content: string;
+  onChange: (val: string) => void;
+}) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We use Lowlight
       }),
       Link.configure({ openOnClick: false }),
-      Placeholder.configure({ 
+      Placeholder.configure({
         placeholder: "Type '/' for commands or '@' to link a memory...",
       }),
       TaskList,
@@ -61,7 +80,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
       Image,
       Mention.configure({
         HTMLAttributes: {
-          class: 'mention',
+          class: "mention",
         },
         suggestion: mentionSuggestion,
       }),
@@ -75,7 +94,8 @@ export default function Editor({ content, onChange }: { content: string, onChang
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg dark:prose-invert focus:outline-none max-w-none min-h-[500px] px-8 py-6 editor-container',
+        class:
+          "prose prose-lg dark:prose-invert focus:outline-none max-w-none min-h-[500px] px-8 py-6 editor-container",
       },
     },
   });
@@ -87,10 +107,15 @@ export default function Editor({ content, onChange }: { content: string, onChang
   return (
     <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden relative">
       {editor && (
-        <BubbleMenu editor={editor} className="flex bg-card shadow-xl border border-border rounded-lg overflow-hidden divide-x divide-border">
+        <BubbleMenu
+          editor={editor}
+          className="flex bg-card shadow-xl border border-border rounded-lg overflow-hidden divide-x divide-border"
+        >
           <div className="flex items-center px-1">
             <button
-              onClick={() => {/* Turn into logic */ }}
+              onClick={() => {
+                /* Turn into logic */
+              }}
               className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-muted text-xs font-bold text-muted-foreground transition-colors"
             >
               <Type className="w-3.5 h-3.5" />
@@ -101,38 +126,38 @@ export default function Editor({ content, onChange }: { content: string, onChang
           <div className="flex items-center p-1 gap-0.5">
             <button
               onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('bold') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive("bold") ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
               title="Bold"
             >
               <Bold className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('italic') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive("italic") ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
               title="Italic"
             >
               <Italic className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('strike') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive("strike") ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
               title="Strikethrough"
             >
               <Strikethrough className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleCode().run()}
-              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('code') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive("code") ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
               title="Inline Code"
             >
               <Code className="w-4 h-4" />
             </button>
             <button
               onClick={() => {
-                const url = window.prompt('URL');
+                const url = window.prompt("URL");
                 if (url) editor.chain().focus().setLink({ href: url }).run();
               }}
-              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive('link') ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+              className={`p-1.5 rounded hover:bg-muted transition-colors ${editor.isActive("link") ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
               title="Link"
             >
               <LinkIcon className="w-4 h-4" />
@@ -142,38 +167,45 @@ export default function Editor({ content, onChange }: { content: string, onChang
       )}
 
       {editor && (
-        <FloatingMenu editor={editor} className="flex bg-card shadow-lg border border-border rounded-lg overflow-hidden p-1 gap-1">
+        <FloatingMenu
+          editor={editor}
+          className="flex bg-card shadow-lg border border-border rounded-lg overflow-hidden p-1 gap-1"
+        >
           <button
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''}`}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive("heading", { level: 1 }) ? "bg-muted" : ""}`}
             title="Heading 1"
           >
             <Heading1 className="w-4 h-4 text-foreground" />
           </button>
           <button
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}`}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive("heading", { level: 2 }) ? "bg-muted" : ""}`}
             title="Heading 2"
           >
             <Heading2 className="w-4 h-4 text-foreground" />
           </button>
           <button
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('bulletList') ? 'bg-muted' : ''}`}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive("bulletList") ? "bg-muted" : ""}`}
             title="Bullet List"
           >
             <List className="w-4 h-4 text-foreground" />
           </button>
           <button
             onClick={() => editor.chain().focus().toggleTaskList().run()}
-            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('taskList') ? 'bg-muted' : ''}`}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive("taskList") ? "bg-muted" : ""}`}
             title="Task List"
           >
             <CheckSquare className="w-4 h-4 text-foreground" />
           </button>
           <button
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={`p-1.5 rounded hover:bg-muted ${editor.isActive('blockquote') ? 'bg-muted' : ''}`}
+            className={`p-1.5 rounded hover:bg-muted ${editor.isActive("blockquote") ? "bg-muted" : ""}`}
             title="Quote"
           >
             <Quote className="w-4 h-4 text-foreground" />
@@ -181,8 +213,11 @@ export default function Editor({ content, onChange }: { content: string, onChang
         </FloatingMenu>
       )}
 
-      <EditorContent editor={editor} className="font-sans editor-container text-foreground" />
-      
+      <EditorContent
+        editor={editor}
+        className="font-sans editor-container text-foreground"
+      />
+
       {/* GLOBAL STYLES FOR NOTION LOOK */}
       <style jsx global>{`
         .editor-container .ProseMirror {
@@ -190,16 +225,20 @@ export default function Editor({ content, onChange }: { content: string, onChang
         }
 
         /* Block Handles (Visual) */
-        .ProseMirror p, .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror li {
+        .ProseMirror p,
+        .ProseMirror h1,
+        .ProseMirror h2,
+        .ProseMirror h3,
+        .ProseMirror li {
           position: relative;
         }
 
-        .ProseMirror p:hover::before, 
-        .ProseMirror h1:hover::before, 
-        .ProseMirror h2:hover::before, 
+        .ProseMirror p:hover::before,
+        .ProseMirror h1:hover::before,
+        .ProseMirror h2:hover::before,
         .ProseMirror h3:hover::before,
         .ProseMirror li:hover::before {
-          content: '⠿';
+          content: "⠿";
           position: absolute;
           left: -1.5rem;
           top: 0.2rem;
@@ -210,7 +249,9 @@ export default function Editor({ content, onChange }: { content: string, onChang
           transition: color 0.2s;
         }
 
-        .ProseMirror p:hover::before { top: 0; }
+        .ProseMirror p:hover::before {
+          top: 0;
+        }
 
         /* Placeholder */
         .ProseMirror p.is-editor-empty:first-child::before {
@@ -258,7 +299,7 @@ export default function Editor({ content, onChange }: { content: string, onChang
           background: #2e3440;
           border-radius: 0.5rem;
           color: #d8dee9;
-          font-family: 'JetBrains Mono', monospace;
+          font-family: "JetBrains Mono", monospace;
           padding: 0.75rem 1rem;
         }
 
@@ -269,11 +310,26 @@ export default function Editor({ content, onChange }: { content: string, onChang
           color: var(--muted-foreground);
           font-style: italic;
         }
-        
+
         /* Headers */
-        h1 { font-size: 2.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; }
-        h2 { font-size: 1.75rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-        h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        h1 {
+          font-size: 2.25rem;
+          font-weight: 800;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+        h2 {
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin-top: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        h3 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+        }
       `}</style>
     </div>
   );

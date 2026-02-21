@@ -1,32 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar as CalendarIcon, 
-  Clock, 
+import { useState, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  Clock,
   Plus,
   X,
   Send,
-  Loader2
-} from 'lucide-react';
-import { formatToMMDDYYYY } from '@/lib/date-utils';
+  Loader2,
+} from "lucide-react";
+import { formatToMMDDYYYY } from "@/lib/date-utils";
 
-const VIEWS = ['Day', 'Week', 'Month'];
+const VIEWS = ["Day", "Week", "Month"];
 
 export default function CalendarPage() {
-  const [view, setView] = useState('Month');
+  const [view, setView] = useState("Month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<any[]>([]);
   const [isModalOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
+
   // New Event Form State
-  const [newTitle, setNewTitle] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [newType, setNewType] = useState('TASK');
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newType, setNewType] = useState("TASK");
 
   useEffect(() => {
     fetchEvents();
@@ -34,30 +34,58 @@ export default function CalendarPage() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/calendar/events');
+      const res = await fetch("/api/calendar/events");
       if (res.ok) setEvents(await res.json());
     } catch (e) {
-      console.error('Failed to load events');
+      console.error("Failed to load events");
     }
   };
 
   const handlePrev = () => {
-    if (view === 'Month') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-    } else if (view === 'Week') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7));
+    if (view === "Month") {
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
+      );
+    } else if (view === "Week") {
+      setCurrentDate(
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          currentDate.getDate() - 7,
+        ),
+      );
     } else {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1));
+      setCurrentDate(
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          currentDate.getDate() - 1,
+        ),
+      );
     }
   };
 
   const handleNext = () => {
-    if (view === 'Month') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-    } else if (view === 'Week') {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7));
+    if (view === "Month") {
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
+      );
+    } else if (view === "Week") {
+      setCurrentDate(
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          currentDate.getDate() + 7,
+        ),
+      );
     } else {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1));
+      setCurrentDate(
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          currentDate.getDate() + 1,
+        ),
+      );
     }
   };
 
@@ -72,20 +100,20 @@ export default function CalendarPage() {
 
     setIsSaving(true);
     try {
-      const res = await fetch('/api/calendar/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTitle,
           description: newDesc,
           type: newType,
           scheduledAt: selectedDate.toISOString(),
-        })
+        }),
       });
 
       if (res.ok) {
-        setNewTitle('');
-        setNewDesc('');
+        setNewTitle("");
+        setNewDesc("");
         setIsOpen(false);
         fetchEvents();
       }
@@ -96,11 +124,13 @@ export default function CalendarPage() {
 
   // Helper to get events for a specific date
   const getEventsForDay = (date: Date) => {
-    return events.filter(e => {
+    return events.filter((e) => {
       const d = new Date(e.scheduledAt);
-      return d.getDate() === date.getDate() && 
-             d.getMonth() === date.getMonth() && 
-             d.getFullYear() === date.getFullYear();
+      return (
+        d.getDate() === date.getDate() &&
+        d.getMonth() === date.getMonth() &&
+        d.getFullYear() === date.getFullYear()
+      );
     });
   };
 
@@ -115,13 +145,20 @@ export default function CalendarPage() {
   };
 
   const getDayLabel = () => {
-    if (view === 'Month') {
-      return currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-    } else if (view === 'Week') {
+    if (view === "Month") {
+      return currentDate.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+    } else if (view === "Week") {
       const week = getWeekDays(currentDate);
-      return `${week[0].toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${week[6].toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      return `${week[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${week[6].toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
     } else {
-      return currentDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+      return currentDate.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
     }
   };
 
@@ -135,7 +172,10 @@ export default function CalendarPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-foreground italic transition-colors">
-              Synaptic <span className="text-primary not-italic font-medium">Schedule</span>
+              Synaptic{" "}
+              <span className="text-primary not-italic font-medium">
+                Schedule
+              </span>
             </h1>
             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest transition-colors opacity-60">
               Temporal Intelligence Layer
@@ -151,9 +191,9 @@ export default function CalendarPage() {
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                  view === v 
-                    ? 'bg-card text-foreground shadow-sm border border-border' 
-                    : 'text-muted-foreground hover:text-foreground'
+                  view === v
+                    ? "bg-card text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {v}
@@ -164,7 +204,7 @@ export default function CalendarPage() {
           <div className="h-6 w-[1px] bg-border mx-2" />
 
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={handlePrev}
               className="p-2 hover:bg-muted rounded-xl text-muted-foreground transition-all"
             >
@@ -173,7 +213,7 @@ export default function CalendarPage() {
             <span className="text-sm font-black uppercase tracking-widest text-foreground min-w-[200px] text-center">
               {getDayLabel()}
             </span>
-            <button 
+            <button
               onClick={handleNext}
               className="p-2 hover:bg-muted rounded-xl text-muted-foreground transition-all"
             >
@@ -181,8 +221,11 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          <button 
-            onClick={() => { setSelectedDate(new Date()); setIsOpen(true); }}
+          <button
+            onClick={() => {
+              setSelectedDate(new Date());
+              setIsOpen(true);
+            }}
             className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 active:scale-95"
           >
             <Plus className="w-4 h-4" />
@@ -193,47 +236,75 @@ export default function CalendarPage() {
 
       {/* Main Calendar Area */}
       <main className="flex-1 overflow-auto p-8">
-        {view === 'Month' && (
+        {view === "Month" && (
           <div className="grid grid-cols-7 border-t border-l border-border rounded-3xl overflow-hidden shadow-2xl shadow-primary/5">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="bg-muted/20 border-r border-b border-border p-4 text-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{day}</span>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div
+                key={day}
+                className="bg-muted/20 border-r border-b border-border p-4 text-center"
+              >
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                  {day}
+                </span>
               </div>
             ))}
             {/* Generate 42 squares for a 6-week month view (standard for full coverage) */}
             {Array.from({ length: 42 }).map((_, i) => {
-              const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+              const firstDayOfMonth = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                1,
+              );
               const startDay = firstDayOfMonth.getDay();
-              const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), i - startDay + 1);
-              
+              const dayDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                i - startDay + 1,
+              );
+
               const isValidDay = dayDate.getMonth() === currentDate.getMonth();
-              const isToday = dayDate.toDateString() === new Date().toDateString();
-              
+              const isToday =
+                dayDate.toDateString() === new Date().toDateString();
+
               const dayEvents = isValidDay ? getEventsForDay(dayDate) : [];
 
               return (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   onClick={() => isValidDay && handleDateClick(dayDate)}
                   className={`min-h-[140px] bg-card border-r border-b border-border p-4 transition-colors relative ${
-                    isValidDay ? 'hover:bg-muted/10 group cursor-pointer' : 'opacity-20 pointer-events-none'
+                    isValidDay
+                      ? "hover:bg-muted/10 group cursor-pointer"
+                      : "opacity-20 pointer-events-none"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <span className={`text-xs font-black ${isToday ? 'bg-primary text-primary-foreground w-6 h-6 rounded-lg flex items-center justify-center -mt-1 -ml-1 shadow-lg' : 'text-muted-foreground'}`}>
-                      {isValidDay ? dayDate.getDate() : ''}
+                    <span
+                      className={`text-xs font-black ${isToday ? "bg-primary text-primary-foreground w-6 h-6 rounded-lg flex items-center justify-center -mt-1 -ml-1 shadow-lg" : "text-muted-foreground"}`}
+                    >
+                      {isValidDay ? dayDate.getDate() : ""}
                     </span>
                   </div>
-                  
+
                   {isValidDay && (
                     <div className="space-y-1.5">
-                      {dayEvents.map(event => (
-                        <div key={event.id} className="bg-background border border-border p-1.5 rounded-lg shadow-sm flex items-center gap-2 group/item hover:border-primary/50 transition-all">
-                          <div className={`w-1 h-4 rounded-full ${
-                            event.type === 'NUDGE' ? 'bg-aurora-orange' : 
-                            event.type === 'NOTIFICATION' ? 'bg-aurora-purple' : 'bg-aurora-green'
-                          }`} />
-                          <span className="text-[9px] font-bold text-foreground/80 truncate">{event.title}</span>
+                      {dayEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="bg-background border border-border p-1.5 rounded-lg shadow-sm flex items-center gap-2 group/item hover:border-primary/50 transition-all"
+                        >
+                          <div
+                            className={`w-1 h-4 rounded-full ${
+                              event.type === "NUDGE"
+                                ? "bg-aurora-orange"
+                                : event.type === "NOTIFICATION"
+                                  ? "bg-aurora-purple"
+                                  : "bg-aurora-green"
+                            }`}
+                          />
+                          <span className="text-[9px] font-bold text-foreground/80 truncate">
+                            {event.title}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -244,11 +315,16 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {view === 'Week' && (
+        {view === "Week" && (
           <div className="grid grid-cols-7 border-t border-l border-border rounded-3xl overflow-hidden shadow-2xl shadow-primary/5">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="bg-muted/20 border-r border-b border-border p-4 text-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{day}</span>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div
+                key={day}
+                className="bg-muted/20 border-r border-b border-border p-4 text-center"
+              >
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                  {day}
+                </span>
               </div>
             ))}
             {getWeekDays(currentDate).map((day, i) => {
@@ -256,24 +332,36 @@ export default function CalendarPage() {
               const dayEvents = getEventsForDay(day);
 
               return (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   onClick={() => handleDateClick(day)}
                   className="min-h-[400px] bg-card border-r border-b border-border p-4 hover:bg-muted/10 group cursor-pointer transition-colors relative"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <span className={`text-sm font-black ${isToday ? 'bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-lg' : 'text-muted-foreground'}`}>
+                    <span
+                      className={`text-sm font-black ${isToday ? "bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-lg" : "text-muted-foreground"}`}
+                    >
                       {day.getDate()}
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {dayEvents.map(event => (
-                      <div key={event.id} className="bg-background border border-border p-2 rounded-xl shadow-sm flex items-center gap-3 hover:border-primary/50 transition-all">
-                        <div className={`w-1.5 h-6 rounded-full ${
-                          event.type === 'NUDGE' ? 'bg-aurora-orange' : 
-                          event.type === 'NOTIFICATION' ? 'bg-aurora-purple' : 'bg-aurora-green'
-                        }`} />
-                        <span className="text-[10px] font-bold text-foreground/80">{event.title}</span>
+                    {dayEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="bg-background border border-border p-2 rounded-xl shadow-sm flex items-center gap-3 hover:border-primary/50 transition-all"
+                      >
+                        <div
+                          className={`w-1.5 h-6 rounded-full ${
+                            event.type === "NUDGE"
+                              ? "bg-aurora-orange"
+                              : event.type === "NOTIFICATION"
+                                ? "bg-aurora-purple"
+                                : "bg-aurora-green"
+                          }`}
+                        />
+                        <span className="text-[10px] font-bold text-foreground/80">
+                          {event.title}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -283,22 +371,29 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {view === 'Day' && (
+        {view === "Day" && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/5">
               <div className="p-8 border-b border-border bg-muted/20 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <span className="text-4xl font-black italic text-primary">{currentDate.getDate()}</span>
+                  <span className="text-4xl font-black italic text-primary">
+                    {currentDate.getDate()}
+                  </span>
                   <div>
                     <h2 className="text-xl font-black uppercase tracking-widest text-foreground">
-                      {currentDate.toLocaleString('default', { weekday: 'long' })}
+                      {currentDate.toLocaleString("default", {
+                        weekday: "long",
+                      })}
                     </h2>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      {currentDate.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
                     </p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => handleDateClick(currentDate)}
                   className="bg-primary/10 text-primary p-3 rounded-2xl hover:bg-primary/20 transition-all"
                 >
@@ -308,16 +403,28 @@ export default function CalendarPage() {
               <div className="p-8">
                 <div className="space-y-4">
                   {getEventsForDay(currentDate).length > 0 ? (
-                    getEventsForDay(currentDate).map(event => (
-                      <div key={event.id} className="bg-background border border-border p-6 rounded-[2rem] shadow-sm flex items-center justify-between hover:border-primary/50 transition-all group">
+                    getEventsForDay(currentDate).map((event) => (
+                      <div
+                        key={event.id}
+                        className="bg-background border border-border p-6 rounded-[2rem] shadow-sm flex items-center justify-between hover:border-primary/50 transition-all group"
+                      >
                         <div className="flex items-center gap-6">
-                          <div className={`w-2 h-12 rounded-full ${
-                            event.type === 'NUDGE' ? 'bg-aurora-orange' : 
-                            event.type === 'NOTIFICATION' ? 'bg-aurora-purple' : 'bg-aurora-green'
-                          }`} />
+                          <div
+                            className={`w-2 h-12 rounded-full ${
+                              event.type === "NUDGE"
+                                ? "bg-aurora-orange"
+                                : event.type === "NOTIFICATION"
+                                  ? "bg-aurora-purple"
+                                  : "bg-aurora-green"
+                            }`}
+                          />
                           <div>
-                            <h4 className="text-lg font-black text-foreground mb-1 italic">{event.title}</h4>
-                            <p className="text-sm text-muted-foreground font-medium">{event.description || 'No synaptic data added.'}</p>
+                            <h4 className="text-lg font-black text-foreground mb-1 italic">
+                              {event.title}
+                            </h4>
+                            <p className="text-sm text-muted-foreground font-medium">
+                              {event.description || "No synaptic data added."}
+                            </p>
                           </div>
                         </div>
                         <div className="bg-muted/50 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -330,8 +437,12 @@ export default function CalendarPage() {
                       <div className="bg-muted p-6 rounded-3xl mb-6">
                         <Clock className="w-12 h-12 text-muted-foreground opacity-30" />
                       </div>
-                      <h3 className="text-xl font-black italic text-foreground mb-2">No Temporal Anomalies</h3>
-                      <p className="text-muted-foreground text-sm font-medium">Your schedule is currently a void of potential.</p>
+                      <h3 className="text-xl font-black italic text-foreground mb-2">
+                        No Temporal Anomalies
+                      </h3>
+                      <p className="text-muted-foreground text-sm font-medium">
+                        Your schedule is currently a void of potential.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -351,21 +462,28 @@ export default function CalendarPage() {
                   <CalendarIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-widest italic leading-tight text-white">Schedule Intelligence</h3>
+                  <h3 className="text-lg font-black uppercase tracking-widest italic leading-tight text-white">
+                    Schedule Intelligence
+                  </h3>
                   <p className="text-[10px] font-bold opacity-80 uppercase tracking-tighter text-white">
-                    {selectedDate ? formatToMMDDYYYY(selectedDate) : ''}
+                    {selectedDate ? formatToMMDDYYYY(selectedDate) : ""}
                   </p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-all active:scale-90">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-white/20 p-2 rounded-full transition-all active:scale-90"
+              >
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
             <form onSubmit={handleCreateEvent} className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Event Essence</label>
-                <input 
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                  Event Essence
+                </label>
+                <input
                   autoFocus
                   type="text"
                   value={newTitle}
@@ -377,8 +495,10 @@ export default function CalendarPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Synaptic Description</label>
-                <textarea 
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                  Synaptic Description
+                </label>
+                <textarea
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                   placeholder="Add context or notes..."
@@ -388,8 +508,10 @@ export default function CalendarPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Logic Type</label>
-                  <select 
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                    Logic Type
+                  </label>
+                  <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary appearance-none shadow-inner"
@@ -399,14 +521,18 @@ export default function CalendarPage() {
                     <option value="NOTIFICATION">Alert (Purple)</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-end pb-1">
-                   <button 
+                  <button
                     type="submit"
                     disabled={isSaving || !newTitle.trim()}
                     className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
                   >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
                     Inject Event
                   </button>
                 </div>

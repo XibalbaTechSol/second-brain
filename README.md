@@ -23,16 +23,20 @@ CognitoFlow is an active Second Brain SaaS that uses Gemini 2.0 to analyze, conn
 ## 🏁 Getting Started
 
 ### 1. Prerequisites
+
 - Node.js 20+
 - Google Gemini API Key
 
 ### 2. Installation
+
 ```bash
 npm install
 ```
 
 ### 3. Configuration
+
 Create a `.env` file in `apps/web` and `packages/backend` (or use the deploy script to sync them):
+
 ```env
 GEMINI_API_KEY=your_key_here
 DATABASE_URL="file:./dev.db"
@@ -41,12 +45,14 @@ NEXTAUTH_URL=http://localhost:3000
 ```
 
 ### 4. Database Setup
+
 ```bash
 cd packages/database
 npx prisma db push
 ```
 
 ### 5. Running
+
 ```bash
 npm run dev
 ```
@@ -54,11 +60,14 @@ npm run dev
 ## 🚢 Production Deployment
 
 Use the included deployment script for a streamlined production setup:
+
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
 This will automatically sync keys, migrate the database, build all packages, and start services using PM2.
 
 ---
+
 © 2026 CognitoFlow SaaS. Built for the Post-AI Age.
