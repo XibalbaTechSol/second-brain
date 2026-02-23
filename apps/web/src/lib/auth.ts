@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -16,38 +17,45 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
+    // 🛡️ Sentinel: Restrict insecure credentials provider to dev/test environments.
+    // This provider bypasses authentication (no password check) and must NEVER be active in production.
+    ...(process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test"
+      ? [
+          CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+              email: { label: "Email", type: "email" },
+              password: { label: "Password", type: "password" },
+            },
+            async authorize(credentials) {
+              if (!credentials?.email) return null;
 
-        // "Ignore security" - auto create or just find
-        let user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
+              // "Ignore security" - auto create or just find
+              let user = await prisma.user.findUnique({
+                where: { email: credentials.email },
+              });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.email.split('@')[0],
-              trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
-              subscription: {
-                create: {
-                  tier: 'FREE'
-                }
+              if (!user) {
+                user = await prisma.user.create({
+                  data: {
+                    id: crypto.randomUUID(),
+                    email: credentials.email,
+                    name: credentials.email.split("@")[0],
+                    trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
+                    subscription: {
+                      create: {
+                        tier: "FREE",
+                      },
+                    },
+                  },
+                });
               }
-            }
-          });
-        }
 
-        return user;
-      }
-    })
+              return user;
+            },
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: "jwt"
