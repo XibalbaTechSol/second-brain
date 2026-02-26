@@ -1,0 +1,4 @@
+## 2024-05-22 - Unauthenticated File Upload and Broken Auth Logic
+**Vulnerability:** The `/api/upload` endpoint was completely unauthenticated and allowed arbitrary file uploads with no size limit. Additionally, the NextAuth `User` creation logic was broken (missing ID), preventing builds and potentially leaving users in a broken state if signup succeeded partially (though it crashed).
+**Learning:** The project uses a hybrid auth approach (NextAuth + Supabase). API routes must explicitly check authentication using `getUser` from `@/lib/auth-helpers` as middleware protection is not comprehensive for API routes (middleware only updates session, doesn't enforce auth). The `User` model requires manual ID generation unlike standard Prisma defaults.
+**Prevention:** Always verify authentication at the beginning of API route handlers. Use `getUser` helper. Ensure `User.create` calls include a UUID.
