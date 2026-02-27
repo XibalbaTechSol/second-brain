@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { Entity, AuditLog } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
     ]);
 
     // Group logs by entityId for easy access
-    const logsByEntity = logs.reduce((acc: any, log: any) => {
+    const logsByEntity = logs.reduce((acc: Record<string, AuditLog[]>, log: AuditLog) => {
       const eid = log.entityId || 'system';
       if (!acc[eid]) acc[eid] = [];
       acc[eid].push(log);
@@ -29,10 +30,10 @@ export async function GET() {
 
     return NextResponse.json({
       inbox: inboxItems,
-      projects: entities.filter(e => e.type === 'PROJECT'),
-      ideas: entities.filter(e => e.type === 'NOTE'),
-      resources: entities.filter(e => e.type === 'RESOURCE'),
-      people: entities.filter(e => e.type === 'CONTACT'),
+      projects: entities.filter((e: Entity) => e.type === 'PROJECT'),
+      ideas: entities.filter((e: Entity) => e.type === 'NOTE'),
+      resources: entities.filter((e: Entity) => e.type === 'RESOURCE'),
+      people: entities.filter((e: Entity) => e.type === 'CONTACT'),
       logsByEntity
     });
   } catch (error) {

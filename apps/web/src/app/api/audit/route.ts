@@ -9,11 +9,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const entities = await prisma.entity.findMany({ where: { userId: user.id }, select: { id: true } });
+
     const logs = await prisma.auditLog.findMany({
       where: {
         OR: [
           { workflow: { userId: user.id } },
-          { entityId: { in: (await prisma.entity.findMany({ where: { userId: user.id }, select: { id: true } })).map(e => e.id) } }
+          { entityId: { in: entities.map((e: { id: string }) => e.id) } }
         ]
       },
       orderBy: { timestamp: 'desc' },
