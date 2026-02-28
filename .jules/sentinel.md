@@ -1,0 +1,4 @@
+## 2025-02-25 - [File Upload Vulnerability]
+**Vulnerability:** Unauthenticated arbitrary file upload with user-controlled filenames.
+**Learning:** The file upload endpoint (`apps/web/src/app/api/upload/route.ts`) lacked authentication, size limits, and robust MIME type checking. It trusted the user-provided filename extension, which could allow an attacker to upload an executable script (like `.html` or `.js`) disguised as an image. When served statically, this would lead to Stored XSS or potential DoS via large file uploads.
+**Prevention:** Always authenticate sensitive endpoints. For file uploads, enforce strict size limits. Never trust the user-provided filename or extension; explicitly map validated MIME types to safe extensions and use secure UUIDs for filenames to prevent path traversal and naming collisions.

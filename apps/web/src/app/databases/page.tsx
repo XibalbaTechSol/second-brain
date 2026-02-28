@@ -16,10 +16,10 @@ export default async function DatabasesPage() {
     }
   });
 
-  const data = entities.map(e => ({
+  const data = entities.map((e: any) => ({
     id: e.id,
     name: e.title,
-    tags: [e.type, ...(e.tags?.map(t => t.name) || [])],
+    tags: [e.type, ...(e.tags?.map((t: any) => t.name) || [])],
     status: e.status || 'Active',
     role: e.person?.role,
     company: e.person?.company,
