@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const workflows = await prisma.workflow.findMany({
+      where: { userId: user.id },
       orderBy: { name: 'asc' },
     });
     return NextResponse.json(workflows);
@@ -15,8 +22,22 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, name, trigger, conditions, actions, isActive } = body;
+
+    // Verify ownership before updating to prevent IDOR
+    const existingWorkflow = await prisma.workflow.findUnique({
+      where: { id }
+    });
+
+    if (!existingWorkflow || existingWorkflow.userId !== user.id) {
+      return NextResponse.json({ error: 'Not found or forbidden' }, { status: 404 });
+    }
     
     const updatedWorkflow = await prisma.workflow.update({
       where: { id },
