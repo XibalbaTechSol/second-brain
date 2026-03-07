@@ -1,0 +1,4 @@
+## 2025-03-07 - [Missing Authentication and IDOR on Bulk Endpoints]
+**Vulnerability:** The `/api/databases` endpoint completely lacked authentication checks and query scoping, allowing unauthenticated requests to retrieve all user entities, inbox items, and audit logs across the entire database.
+**Learning:** Next.js API routes do not have global middleware authentication by default in this project. Each endpoint must explicitly verify the user session using `getUser()` and scope all data accesses using the `userId`. The `AuditLog` model, lacking a direct `userId` field, must be filtered via its related `entityId` or `workflowId` to prevent IDOR.
+**Prevention:** Always verify authentication explicitly at the top of every API route with `getUser()`. Never use `findMany()` without a `where` clause scoping to the authenticated user's ID or explicitly determining the tenant.
