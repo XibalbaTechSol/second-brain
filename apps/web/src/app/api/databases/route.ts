@@ -1,19 +1,39 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Fetch all Inbox Items with Audit Logs (if we had a relation, but we use entityId in AuditLog)
     // Actually AuditLog uses entityId. For InboxItems we can match via content or IDs if we linked them.
     // In our processInbox, we link processedEntityId to Entity.id.
     
+    // Get user's entities to scope audit logs
+    const userEntities = await prisma.entity.findMany({ where: { userId: user.id }, select: { id: true } });
+    const userEntityIds = userEntities.map(e => e.id);
+
     const [inboxItems, entities, logs] = await Promise.all([
-      prisma.inboxItem.findMany({ orderBy: { createdAt: 'desc' } }),
+      prisma.inboxItem.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' }
+      }),
       prisma.entity.findMany({ 
+        where: { userId: user.id },
         orderBy: { updatedAt: 'desc' },
         include: { project: true, idea: true, person: true, admin: true, goal: true }
       }),
       prisma.auditLog.findMany({ 
+        where: {
+          OR: [
+            { workflow: { userId: user.id } },
+            { entityId: { in: userEntityIds } }
+          ]
+        },
         orderBy: { timestamp: 'desc' },
         include: { workflow: true }
       })
