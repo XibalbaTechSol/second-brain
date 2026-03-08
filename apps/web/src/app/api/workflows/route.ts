@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const workflows = await prisma.workflow.findMany({
+      where: { userId: user.id },
       orderBy: { name: 'asc' },
     });
     return NextResponse.json(workflows);
@@ -15,9 +22,26 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, name, trigger, conditions, actions, isActive } = body;
     
+    // We cannot just use update with `where: { id }` because it could update someone else's workflow
+    // In prisma, `update` where only allows unique fields. So we must use `updateMany` to scope by `userId`.
+    // Or we verify ownership first. Let's use `updateMany` for safety or fetch and then update.
+
+    const workflow = await prisma.workflow.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!workflow) {
+      return NextResponse.json({ error: 'Not Found or Unauthorized' }, { status: 404 });
+    }
+
     const updatedWorkflow = await prisma.workflow.update({
       where: { id },
       data: {
