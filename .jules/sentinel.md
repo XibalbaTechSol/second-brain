@@ -1,0 +1,4 @@
+## 2024-05-20 - Missing Authentication and IDOR on Sensitive API Routes
+**Vulnerability:** Several Next.js API routes (e.g. `api/entities/[id]/route.ts`) lacked authentication checks (via `getUser`) and did not scope Prisma queries by the authenticated user's ID, permitting Insecure Direct Object Reference (IDOR).
+**Learning:** Next.js API routes do not automatically inherit session authentication unless explicitly enforced via middleware or manual `getUser`/`getServerSession` checks. Furthermore, Prisma's `findUnique` does not allow filtering by both `id` and `userId` together since `userId` is not a strictly unique identifier.
+**Prevention:** Always invoke `await getUser()` and explicitly check the result in every API route. For data access control, use `prisma.<model>.findFirst({ where: { id, userId: user.id } })` to ensure the entity belongs to the requesting user before performing `GET`, `PUT`, or `DELETE` operations.
