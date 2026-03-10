@@ -33,6 +33,7 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           user = await prisma.user.create({
             data: {
+              id: crypto.randomUUID(),
               email: credentials.email,
               name: credentials.email.split('@')[0],
               trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
