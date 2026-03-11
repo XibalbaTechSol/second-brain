@@ -1,0 +1,4 @@
+## 2024-05-18 - Missing Authorization Checks in API Routes (IDOR)
+**Vulnerability:** Next.js API routes (e.g., `inbox/[id]/route.ts`) accepted resource IDs directly from parameters and performed CRUD operations without verifying if the authenticated user owned the resource. This allowed any user to modify or delete resources belonging to other users (Insecure Direct Object Reference).
+**Learning:** Middleware in this project does not block unauthenticated requests to API routes by default, and Next.js App Router API endpoints do not automatically scope database queries to the current user.
+**Prevention:** Always explicitly call `getUser()` at the beginning of sensitive API routes to verify authentication. When performing database operations on specific resources (like `update` or `delete`), query first using `findFirst` with `{ where: { id, userId: user.id } }` to ensure ownership before acting on the resource.
