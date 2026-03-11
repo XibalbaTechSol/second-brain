@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import crypto from 'crypto';
 import { prisma } from "@second-brain/database";
 
 export const authOptions: NextAuthOptions = {
@@ -33,6 +34,7 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           user = await prisma.user.create({
             data: {
+              id: crypto.randomUUID(),
               email: credentials.email,
               name: credentials.email.split('@')[0],
               trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day trial
