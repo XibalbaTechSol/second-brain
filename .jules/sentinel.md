@@ -1,0 +1,4 @@
+## 2025-03-14 - Missing Default API Authentication and IDOR
+**Vulnerability:** Next.js API routes (e.g., `workflows/route.ts`) lack middleware-based authentication by default. Endpoints fail to verify user identity or restrict database queries to the requesting user's `userId`, enabling unauthenticated access and Insecure Direct Object Reference (IDOR) vulnerabilities where users can read/modify data belonging to others.
+**Learning:** In a hybrid auth setup (NextAuth + Supabase helper), middleware doesn't block unauthenticated requests to `/api/*`. Every endpoint must explicitly authenticate the caller and scope data access.
+**Prevention:** Always import `getUser()` from `@/lib/auth-helpers`, assert `if (!user) return 401`, and include `userId: user.id` in all Prisma `where` clauses (using `findFirst` instead of `findUnique` for non-unique scope combinations).

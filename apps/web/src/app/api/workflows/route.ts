@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
+    // SECURITY: Authenticate user before querying workflows
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SECURITY: Scope workflows to the authenticated user to prevent data exposure
     const workflows = await prisma.workflow.findMany({
+      where: { userId: user.id },
       orderBy: { name: 'asc' },
     });
     return NextResponse.json(workflows);
@@ -15,9 +24,24 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    // SECURITY: Authenticate user before modifying workflows
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, name, trigger, conditions, actions, isActive } = body;
     
+    // SECURITY: Verify workflow ownership before updating to prevent IDOR
+    const existingWorkflow = await prisma.workflow.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!existingWorkflow) {
+      return NextResponse.json({ error: 'Workflow not found or unauthorized' }, { status: 404 });
+    }
+
     const updatedWorkflow = await prisma.workflow.update({
       where: { id },
       data: {
