@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getUser } from '@/lib/auth-helpers';
 
 // Initialize Gemini (Web needs access too, or we duplicate logic. 
 // For a monolith, duplicating initialization is fine for now).
@@ -25,6 +26,12 @@ export async function GET(request: Request) {
   if (!query) return NextResponse.json([]);
 
   try {
+    // 🛡️ Sentinel: Enforce authentication to prevent unauthenticated data access
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // 1. Get Embedding for Query
     let queryEmbedding: number[] = [];
     
@@ -38,13 +45,15 @@ export async function GET(request: Request) {
     }
 
     // 2. Fetch all entities (In Production, use pgvector)
+    // 🛡️ Sentinel: Enforce authorization by scoping the query to the authenticated user
     const entities = await prisma.entity.findMany({
+      where: { userId: user.id },
       select: { id: true, title: true, type: true, embedding: true }
     });
 
     // 3. Rank by Similarity
     const results = entities
-      .map(entity => {
+      .map((entity: { id: string, title: string, type: string, embedding: string | null }) => {
         if (!entity.embedding) return null;
         try {
           const vector = JSON.parse(entity.embedding);
@@ -56,8 +65,8 @@ export async function GET(request: Request) {
           return null;
         }
       })
-      .filter((e): e is NonNullable<typeof e> => e !== null)
-      .sort((a, b) => b.score - a.score) // Descending
+      .filter((e: any): e is NonNullable<typeof e> => e !== null)
+      .sort((a: any, b: any) => b.score - a.score) // Descending
       .slice(0, 10); // Top 10
 
     return NextResponse.json(results);

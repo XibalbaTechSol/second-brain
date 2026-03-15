@@ -29,10 +29,10 @@ export async function GET() {
 
     return NextResponse.json({
       inbox: inboxItems,
-      projects: entities.filter(e => e.type === 'PROJECT'),
-      ideas: entities.filter(e => e.type === 'NOTE'),
-      resources: entities.filter(e => e.type === 'RESOURCE'),
-      people: entities.filter(e => e.type === 'CONTACT'),
+      projects: entities.filter((e: { type: string }) => e.type === 'PROJECT'),
+      ideas: entities.filter((e: { type: string }) => e.type === 'NOTE'),
+      resources: entities.filter((e: { type: string }) => e.type === 'RESOURCE'),
+      people: entities.filter((e: { type: string }) => e.type === 'CONTACT'),
       logsByEntity
     });
   } catch (error) {
