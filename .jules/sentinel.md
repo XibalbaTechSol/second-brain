@@ -1,0 +1,4 @@
+## 2025-02-15 - [Missing Auth and IDOR in Next.js API Routes]
+**Vulnerability:** Next.js API routes (e.g. `inbox/[id]/route.ts`) lacked authentication middleware by default, allowing unauthenticated users to modify or delete resources. Additionally, because there were no checks tying the resource to the user's ID, any logged-in user could manipulate another user's resources by guessing the ID (IDOR).
+**Learning:** Next.js route handlers in this application architecture do not automatically protect endpoints. Authentication (`getUser()`) and explicit authorization (`userId: user.id`) must be written in every single API route handler.
+**Prevention:** Always verify authentication using `getUser()` at the start of Next.js API route handlers, and always verify that a resource belongs to the current `user.id` using `findFirst` in Prisma before making changes.
