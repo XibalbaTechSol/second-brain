@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 // GET Single Entity
 export async function GET(
@@ -8,8 +9,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const entity = await prisma.entity.findUnique({
-      where: { id },
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const entity = await prisma.entity.findFirst({
+      where: { id, userId: user.id },
       include: {
         project: true,
         idea: true,
@@ -40,6 +46,20 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify ownership
+    const existingEntity = await prisma.entity.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!existingEntity) {
+      return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
+    }
+
     const { title, content, isDone, priority, status, tags } = body;
 
     // Prepare update data
@@ -88,6 +108,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify ownership
+    const existingEntity = await prisma.entity.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!existingEntity) {
+      return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
+    }
 
     // Cleanup metadata first (cascade should handle this usually, but being safe)
     await Promise.all([
