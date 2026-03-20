@@ -1,0 +1,4 @@
+## 2025-03-20 - Missing Authentication and IDOR in Workflows API
+**Vulnerability:** The `/api/workflows` endpoint (GET/PUT) lacked any authentication and authorization logic (`getUser()`). This allowed unauthenticated users to access all workflows and perform unauthorized modifications by supplying valid workload IDs (IDOR).
+**Learning:** Next.js API routes under `apps/web/src/app/api/` in this project lack default middleware authentication. Developers must explicitly call `getUser()` and include `userId: user.id` in `where` clauses of Prisma queries. For update/delete operations, using `findFirst` to verify ownership before modification is required.
+**Prevention:** Establish a project-wide pattern that all non-public API endpoints begin with a `getUser()` check. Always verify the `userId` field against the authenticated session when fetching or modifying Prisma models.
