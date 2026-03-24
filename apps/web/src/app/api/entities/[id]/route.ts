@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@second-brain/database';
+import { getUser } from '@/lib/auth-helpers';
 
 // GET Single Entity
 export async function GET(
@@ -7,9 +8,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
-    const entity = await prisma.entity.findUnique({
-      where: { id },
+    // Security: Ensure the entity belongs to the requesting user
+    const entity = await prisma.entity.findFirst({
+      where: { id, userId: user.id },
       include: {
         project: true,
         idea: true,
@@ -38,7 +45,21 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    // Security: Verify ownership before update
+    const existing = await prisma.entity.findFirst({
+      where: { id, userId: user.id }
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Entity not found or unauthorized' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { title, content, isDone, priority, status, tags } = body;
 
@@ -87,7 +108,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    // Security: Verify ownership before delete
+    const existing = await prisma.entity.findFirst({
+      where: { id, userId: user.id }
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Entity not found or unauthorized' }, { status: 404 });
+    }
 
     // Cleanup metadata first (cascade should handle this usually, but being safe)
     await Promise.all([
